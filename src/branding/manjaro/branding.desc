@@ -1,0 +1,17 @@
+---
+componentName:  manjaro
+
+strings:
+    productName:         Manjaro Linux
+    shortProductName:    Manjaro
+    version:             0.9.0-dev
+    shortVersion:        0.9
+    versionedName:       Manjaro Linux 0.9.0 "Bellatrix"
+    shortVersionedName:  Manjaro 0.9
+    bootloaderEntryName: Manjaro
+
+images:
+    productLogo:         "squid.png"
+    productIcon:         "logo.png"
+
+slideshow:               "show.qml"
