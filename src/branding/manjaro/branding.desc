@@ -13,6 +13,7 @@ strings:
 images:
     productLogo:         "squid.png"
     productIcon:         "logo.png"
+    productWelcome:      "languages.png"
 
 slideshow:               "show.qml"
 
