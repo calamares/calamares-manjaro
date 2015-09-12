@@ -45,7 +45,7 @@ def run():
 
     # Remove calamares
     if os.path.exists("{!s}/usr/bin/calamares".format(install_path)):
-        libcalamares.utils.chroot_call(['pacman', '-R', '--noconfirm', 'calamares'])
+        libcalamares.utils.target_env_call(['pacman', '-R', '--noconfirm', 'calamares'])
 
     # Copy mirror list
     shutil.copy2('/etc/pacman.d/mirrorlist',
@@ -55,7 +55,7 @@ def run():
     if os.path.exists("{!s}/etc/pacman.d/gnupg".format(install_path)):
         os.system("rm -rf {!s}/etc/pacman.d/gnupg".format(install_path))
     os.system("cp -a /etc/pacman.d/gnupg {!s}/etc/pacman.d/".format(install_path))
-    libcalamares.utils.chroot_call(['pacman-key', '--populate', 'archlinux', 'manjaro'])
+    libcalamares.utils.target_env_call(['pacman-key', '--populate', 'archlinux', 'manjaro'])
 
     # Set /etc/keyboard.conf (keyboardctl is depreciated)
     if os.path.exists("{!s}/etc/keyboard.conf".format(install_path)):
@@ -73,7 +73,7 @@ def run():
                 newconsolefh.write("{!s}\n".format(line))
         consolefh.close()
         newconsolefh.close()
-        libcalamares.utils.chroot_call(['mv', '/etc/keyboard.conf', '/etc/keyboard.conf.old'])
-        libcalamares.utils.chroot_call(['mv', '/etc/keyboard.new', '/etc/keyboard.conf'])
+        libcalamares.utils.target_env_call(['mv', '/etc/keyboard.conf', '/etc/keyboard.conf.old'])
+        libcalamares.utils.target_env_call(['mv', '/etc/keyboard.new', '/etc/keyboard.conf'])
 
     return None

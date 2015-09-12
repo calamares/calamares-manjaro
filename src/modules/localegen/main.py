@@ -56,7 +56,7 @@ def run():
                     line = line[1:]
                 gen.write(line)
 
-        libcalamares.utils.chroot_call(['locale-gen'])
+        libcalamares.utils.target_env_call(['locale-gen'])
         print('locale.gen done')
 
     # Set etc/locale.conf
