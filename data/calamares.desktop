@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=Install Manjaro Linux
-GenericName=Live Installer
+Name=Install Manjaro Linux (Calamares)
+GenericName=Live Installer (Calamares)
 Comment=Install the operating system to disk
 Exec=sudo /usr/bin/calamares
 Icon=calamares
