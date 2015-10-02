@@ -56,6 +56,11 @@ def run():
         os.system("rm -rf {!s}/etc/pacman.d/gnupg".format(install_path))
     os.system("cp -a /etc/pacman.d/gnupg {!s}/etc/pacman.d/".format(install_path))
     libcalamares.utils.target_env_call(['pacman-key', '--populate', 'archlinux', 'manjaro'])
+    
+    # Workaround for pacman-key bug FS#45351 https://bugs.archlinux.org/task/45351
+    # We have to kill gpg-agent because if it stays around we can't reliably unmount
+    # the target partition.
+    libcalamares.utils.target_env_call(['killall', '-9', 'gpg-agent'])
 
     # Set /etc/keyboard.conf (keyboardctl is depreciated)
     if os.path.exists("{!s}/etc/keyboard.conf".format(install_path)):
