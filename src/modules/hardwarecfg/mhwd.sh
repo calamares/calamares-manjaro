@@ -39,8 +39,8 @@ else
 fi
 
 # Network driver
-mhwd --auto pci free 0200 --pmconfig "/opt/livecd/pacman-gfx.conf"
-mhwd --auto pci free 0280 --pmconfig "/opt/livecd/pacman-gfx.conf"
+chroot ${DESTDIR} mhwd --auto pci free 0200 --pmconfig "/opt/livecd/pacman-gfx.conf"
+chroot ${DESTDIR} mhwd --auto pci free 0280 --pmconfig "/opt/livecd/pacman-gfx.conf"
 
 umount ${DESTDIR}/opt/livecd
 rmdir ${DESTDIR}/opt/livecd
