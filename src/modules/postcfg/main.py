@@ -17,11 +17,10 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Calamares. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import libcalamares
-import shutil
 
-from libcalamares.utils import check_chroot_call
+import os
+import shutil
 
 def run():
     """ Misc postinstall configurations """
@@ -45,7 +44,7 @@ def run():
 
     # Update grub.cfg
     if os.path.exists("{!s}/usr/bin/update-grub".format(install_path)):
-        check_chroot_call(["update-grub"])
+        libcalamares.utils.chroot_call(["update-grub"])
 
     # Remove calamares
     if os.path.exists("{!s}/usr/bin/calamares".format(install_path)):
