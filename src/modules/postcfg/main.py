@@ -36,12 +36,6 @@ def run():
         os.system("echo \"TERM=mate-terminal\" >> {!s}/etc/environment".format(install_path))
         os.system("echo \"TERM=mate-terminal\" >> {!s}/etc/profile".format(install_path))
 
-    # Adjust Steam-Native when libudev.so.0 is available
-    if os.path.exists("{!s}/usr/lib/libudev.so.0".format(install_path)) or \
-            os.path.exists("{!s}/usr/lib32/libudev.so.0".format(install_path)):
-        os.system("echo -e \"STEAM_RUNTIME=0\nSTEAM_FRAME_FORCE_CLOSE=1\nLD_LIBRARY_PATH=\/usr\/lib\"" \
-                " >> {!s}/etc/environment".format(install_path))
-
     # Update grub.cfg
     if os.path.exists("{!s}/usr/bin/update-grub".format(install_path)):
         libcalamares.utils.chroot_call(["update-grub"])
