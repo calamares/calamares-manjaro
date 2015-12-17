@@ -4,10 +4,10 @@ componentName:  manjaro-kde
 strings:
     productName:         Manjaro Linux
     shortProductName:    Manjaro
-    version:             15.09
-    shortVersion:        15.09
-    versionedName:       Manjaro Linux 15.09 "Bellatrix"
-    shortVersionedName:  Manjaro 15.09
+    version:             15.12
+    shortVersion:        15.12
+    versionedName:       Manjaro Linux 15.12 "Capella"
+    shortVersionedName:  Manjaro 15.12
     bootloaderEntryName: Manjaro
 
 images:
