@@ -35,7 +35,7 @@ Presentation
         Image {
             id: background1
             source: "slide.png"
-            width: 600; height: 332
+            width: 500; height: 275
             fillMode: Image.PreserveAspectFit
             anchors.centerIn: parent
         }
@@ -56,7 +56,7 @@ Presentation
         Image {
             id: background2
             source: "slide2.png"
-            width: 600; height: 332
+            width: 500; height: 275
             fillMode: Image.PreserveAspectFit
             anchors.centerIn: parent
         }
@@ -77,7 +77,7 @@ Presentation
         Image {
             id: background3
             source: "slide3.png"
-            width: 600; height: 332
+            width: 500; height: 275
             fillMode: Image.PreserveAspectFit
             anchors.centerIn: parent
         }
@@ -98,7 +98,7 @@ Presentation
         Image {
             id: background4
             source: "slide4.png"
-            width: 600; height: 332
+            width: 500; height: 275
             fillMode: Image.PreserveAspectFit
             anchors.centerIn: parent
         }
@@ -119,7 +119,7 @@ Presentation
         Image {
             id: background5
             source: "slide5.png"
-            width: 600; height: 332
+            width: 500; height: 275
             fillMode: Image.PreserveAspectFit
             anchors.centerIn: parent
         }
