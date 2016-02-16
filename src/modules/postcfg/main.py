@@ -37,7 +37,7 @@ def run():
         os.system("echo \"TERM=mate-terminal\" >> {!s}/etc/profile".format(install_path))
 
     # Update grub.cfg
-    if os.path.exists("{!s}/usr/bin/update-grub".format(install_path)):
+    if os.path.exists("{!s}/usr/bin/update-grub".format(install_path)) and libcalamares.globalstorage.value("bootLoader") is not None:
         libcalamares.utils.target_env_call(["update-grub"])
 
     # Remove calamares
