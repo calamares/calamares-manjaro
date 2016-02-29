@@ -16,31 +16,34 @@ USENONFREE="$(kernel_cmdline nonfree no)"
 VIDEO="$(kernel_cmdline xdriver no)"
 DESTDIR="$1"
 
+REPO_PATH=/opt/live
+PAC_CONF=${REPO_PATH}/pacman-gfx.conf
+
 echo "MHWD-Driver: ${USENONFREE}"
 echo "MHWD-Video: ${VIDEO}"
 
 mkdir -p ${DESTDIR}/opt/live
-mount -o bind /opt/live ${DESTDIR}/opt/live > /tmp/mount.pkgs.log
-ls ${DESTDIR}/opt/live >> /tmp/mount.pkgs.log
+mount -o bind ${REPO_PATH} ${DESTDIR}${REPO_PATH} > /tmp/mount.pkgs.log
+ls ${DESTDIR}${REPO_PATH} >> /tmp/mount.pkgs.log
 
 # Video driver
 if  [ "${USENONFREE}" == "yes" ] || [ "${USENONFREE}" == "true" ]; then
 	if  [ "${VIDEO}" == "vesa" ]; then
-		chroot ${DESTDIR} mhwd --install pci video-vesa --pmconfig "/opt/live/pacman-gfx.conf"
+		chroot ${DESTDIR} mhwd --install pci video-vesa --pmconfig "${PAC_CONF}"
 	else
-		chroot ${DESTDIR} mhwd --auto pci nonfree 0300 --pmconfig "/opt/live/pacman-gfx.conf"
+		chroot ${DESTDIR} mhwd --auto pci nonfree 0300 --pmconfig "${PAC_CONF}"
 	fi
 else
 	if  [ "${VIDEO}" == "vesa" ]; then
-		chroot ${DESTDIR} mhwd --install pci video-vesa --pmconfig "/opt/live/pacman-gfx.conf"
+		chroot ${DESTDIR} mhwd --install pci video-vesa --pmconfig "${PAC_CONF}"
 	else
-		chroot ${DESTDIR} mhwd --auto pci free 0300 --pmconfig "/opt/live/pacman-gfx.conf"
+		chroot ${DESTDIR} mhwd --auto pci free 0300 --pmconfig "${PAC_CONF}"
 	fi
 fi
 
 # Network driver
-chroot ${DESTDIR} mhwd --auto pci free 0200 --pmconfig "/opt/live/pacman-gfx.conf"
-chroot ${DESTDIR} mhwd --auto pci free 0280 --pmconfig "/opt/live/pacman-gfx.conf"
+chroot ${DESTDIR} mhwd --auto pci free 0200 --pmconfig "${PAC_CONF}"
+chroot ${DESTDIR} mhwd --auto pci free 0280 --pmconfig "${PAC_CONF}"
 
-umount ${DESTDIR}/opt/live
-rmdir ${DESTDIR}/opt/live
+umount ${DESTDIR}${REPO_PATH}
+rmdir ${DESTDIR}${REPO_PATH}
