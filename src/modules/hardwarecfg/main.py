@@ -98,7 +98,7 @@ def run():
     libcalamares.utils.target_env_call(['alsactl', '-f', '/etc/asound.state', 'store'])
 
     # Install xf86-video driver
-    if os.path.exists("/opt/livecd/pacman-gfx.conf"):
+    if os.path.exists("/opt/live/pacman-gfx.conf"):
         # TODO: get mhwd-script path or port it to python
         mhwd_script_path = '/usr/lib/calamares/modules/hardwarecfg/mhwd.sh'
         #try:
