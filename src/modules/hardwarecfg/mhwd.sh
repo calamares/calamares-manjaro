@@ -14,15 +14,16 @@ kernel_cmdline ()
 
 USENONFREE="$(kernel_cmdline nonfree no)"
 VIDEO="$(kernel_cmdline xdriver no)"
-DESTDIR="$1"
+DESTDIR="/install"
 
 REPO_PATH=/opt/live
+[ -d /opt/livecd ] && REPO_PATH=/opt/livecd
 PAC_CONF=${REPO_PATH}/pacman-gfx.conf
 
 echo "MHWD-Driver: ${USENONFREE}"
 echo "MHWD-Video: ${VIDEO}"
 
-mkdir -p ${DESTDIR}/opt/live
+mkdir -p ${DESTDIR}${REPO_PATH}
 mount -o bind ${REPO_PATH} ${DESTDIR}${REPO_PATH} > /tmp/mount.pkgs.log
 ls ${DESTDIR}${REPO_PATH} >> /tmp/mount.pkgs.log
 
