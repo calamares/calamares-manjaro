@@ -14,7 +14,7 @@ kernel_cmdline ()
 
 USENONFREE="$(kernel_cmdline nonfree no)"
 VIDEO="$(kernel_cmdline xdriver no)"
-DESTDIR="/install"
+DESTDIR="$1"
 
 REPO_PATH=/opt/live
 [ -d /opt/livecd ] && REPO_PATH=/opt/livecd
