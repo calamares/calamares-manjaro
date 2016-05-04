@@ -27,10 +27,6 @@ def run():
 
     install_path = libcalamares.globalstorage.value( "rootMountPoint" )
 
-    # Add BROWSER var
-    os.system("echo \"BROWSER=/usr/bin/xdg-open\" >> {!s}/etc/environment".format(install_path))
-    os.system("echo \"BROWSER=/usr/bin/xdg-open\" >> {!s}/etc/skel/.bashrc".format(install_path))
-    os.system("echo \"BROWSER=/usr/bin/xdg-open\" >> {!s}/etc/profile".format(install_path))
     # Add TERM var
     if os.path.exists("{!s}/usr/bin/mate-session".format(install_path)):
         os.system("echo \"TERM=mate-terminal\" >> {!s}/etc/environment".format(install_path))
