@@ -7,6 +7,6 @@ Comment=Install the operating system to disk
 Exec=pkexec /usr/bin/calamares
 Icon=calamares
 Terminal=false
-StartupNotify=false
+StartupNotify=true
 Type=Application
 Categories=Qt;System;
