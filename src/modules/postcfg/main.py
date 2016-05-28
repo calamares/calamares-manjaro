@@ -27,11 +27,6 @@ def run():
 
     install_path = libcalamares.globalstorage.value( "rootMountPoint" )
 
-    # Add TERM var
-    if os.path.exists("{!s}/usr/bin/mate-session".format(install_path)):
-        os.system("echo \"TERM=mate-terminal\" >> {!s}/etc/environment".format(install_path))
-        os.system("echo \"TERM=mate-terminal\" >> {!s}/etc/profile".format(install_path))
-
     # Update grub.cfg
     if os.path.exists("{!s}/usr/bin/update-grub".format(install_path)) and libcalamares.globalstorage.value("bootLoader") is not None:
         libcalamares.utils.target_env_call(["update-grub"])
