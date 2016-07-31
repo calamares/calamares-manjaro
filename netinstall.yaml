@@ -63,6 +63,7 @@
         - memtest86+
         - os-prober
         - intel-ucode
+        - sudo
 
 - name: "base-devel"
   description: "Development packages"
