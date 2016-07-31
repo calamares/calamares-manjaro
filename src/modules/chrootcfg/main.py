@@ -52,10 +52,14 @@ def prepare(root_dir, dirs):
 		name = root_dir + d['name']
 		if not os.path.exists(name):
 			cal_umask = os.umask(0)
+
 			os.makedirs(name, mode=0o755)
-			os.umask( cal_umask )
+
 			run_dir = root_dir + "/run"
+
 			os.chmod(run_dir, mode=0o755)
+
+			os.umask( cal_umask )
 
 			shutil.copy2("/etc/pacman-mirrors.conf", "{!s}/etc/".format(root_dir))
 
