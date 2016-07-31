@@ -1,7 +1,7 @@
 - name: "base"
   description: "Command line interface"
   #hidden: true
-  selected: true
+  #selected: true
   packages:
         - bash
         - bzip2
@@ -65,6 +65,67 @@
         - intel-ucode
         - sudo
 
+- name: "base-net"
+  description: "Command line interface (net)"
+  #hidden: true
+  #selected: true
+  packages:
+        - bzip2
+        - coreutils
+        - cryptsetup
+        - device-mapper
+        - dhcpcd
+        - diffutils
+        - file
+        - gawk
+        - gcc-libs
+        - gettext
+        - glibc
+        - grep
+        - gzip
+        - inetutils
+        - iproute2
+        - iputils
+        - jfsutils
+        - less
+        - licenses
+        - logrotate
+        - lvm2
+        - man-db
+        - man-pages
+        - manjaro-system
+        - mdadm
+        - mhwd
+        - mhwd-db
+        - nano
+        - netctl
+        - pciutils
+        - pcmciautils
+        - procps-ng
+        - psmisc
+        - reiserfsprogs
+        - s-nail
+        - sed
+        - shadow
+        - sysfsutils
+        - systemd-sysvcompat
+        - tar
+        - texinfo
+        - usbutils
+        - util-linux
+        - vi
+        - which
+        - xfsprogs
+        - tcp_wrappers
+        - linux44
+        - grub
+        - linux-firmware
+        - lsb-release
+        - memtest86+
+        - os-prober
+        - intel-ucode
+        - sudo
+
 - name: "base-devel"
   description: "Development packages"
   packages:
@@ -85,7 +146,6 @@
         - libtool
         - m4
         - make
-        - pacman
         - patch
         - pkg-config
         - sed
@@ -124,7 +184,7 @@
         - tint2
         - sddm
         - compton
-        - l3afpad
+        - kwrite
         - xarchiver
         - network-manager-applet
         - lxtask-gtk3
