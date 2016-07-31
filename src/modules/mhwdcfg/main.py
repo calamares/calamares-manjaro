@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-# === This file is part of Calamares - <http://github.com/calamares> ===
 #
-#   Copyright 2014, Philip Müller <philm@manjaro.org>
+#   Copyright 2014, Artoo <artoo@manjaro.org>
 #
 #   Calamares is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -49,7 +48,7 @@ def run():
 	target_env_call(['alsactl', '-f', '/etc/asound.state', 'store'])
 
         # TODO: port mhwd script to python
-        path = = '/usr/lib/calamares/modules/drivercfg/'
+        path = '/usr/lib/calamares/modules/drivercfg/'
 
 
 	mhwd_script = path + "mhwd.sh"
