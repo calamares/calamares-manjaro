@@ -21,34 +21,44 @@ import shutil
 import libcalamares
 import subprocess
 
-from subprocess import call, check_call
+from subprocess import check_call, CalledProcessError
 from libcalamares.utils import target_env_call
 
-def inst_pac(root_dir, pkg):
+def rank_mirrors():
+	try:
+		target_env_call(["pacman-mirrors",  "-g", "-m", "rank"])
+	except CalledProcessError as e:
+		debug("Cannot rank mirrors", "pacman-mirrors terminated with exit code {}.".format(e.returncode))
+
+
+def install(root_dir, pkg):
 	cache_dir = root_dir + "/var/cache/pacman/pkg"
-	db_path = root_dir + "/var/lib/pacman"
 
 	try:
-		subprocess.call(["pacman", "-Sy", "--noconfirm", "--cachedir", cache_dir, "--root", root_dir, pkg])
-	except subprocess.CalledProcessError as e:
+		check_call(["pacman", "-Sy", "--noconfirm", "--cachedir", cache_dir, "--root", root_dir, pkg])
+	except CalledProcessError as e:
 		return "Cannot install pacman.", "pacman terminated with exit code {}.".format(e.returncode)
 
 	try:
 		target_env_call(["pacman-key", "--init"])
 		target_env_call(["pacman-key", "--populate", "archlinux", "manjaro"])
-	except subprocess.CalledProcessError as e:
-		debug("Cannot init and populate keyring", "'pacman-key' terminated with exit code {}.".format(e.returncode))
+	except CalledProcessError as e:
+		debug("Cannot init and populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
 
 
-
-
-def prepare_pac(root_dir, dirs):
+def prepare(root_dir, dirs):
 
 	for d in dirs:
 		name = root_dir + d['name']
-
 		if not os.path.exists(name):
-			os.makedirs(name, d['mode'])
+			cal_umask = os.umask(0)
+			os.makedirs(name, mode=0o755)
+			os.umask( cal_umask )
+			run_dir = root_dir + "/run"
+			os.chmod(run_dir, mode=0o755)
+
+			shutil.copy2("/etc/pacman-mirrors.conf", "{!s}/etc/".format(root_dir))
+
 
 
 def run():
@@ -58,8 +68,10 @@ def run():
 
 	requirements = libcalamares.job.configuration.get('requirements', [])
 
-	prepare_pac(rootMountPoint, requirements)
+	prepare(rootMountPoint, requirements)
 
-	inst_pac(rootMountPoint, "pacman")
+	install(rootMountPoint, "pacman")
+
+	rank_mirrors()
 
 	return None
