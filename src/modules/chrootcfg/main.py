@@ -21,45 +21,85 @@ import shutil
 import libcalamares
 import subprocess
 
-from subprocess import call, check_call
-from libcalamares.utils import target_env_call
+from subprocess import check_call, CalledProcessError
+from libcalamares.utils import target_env_call, check_target_env_call
 
-def inst_pac(root_dir, pkg):
-	cache_dir = root_dir + "/var/cache/pacman/pkg"
-	db_path = root_dir + "/var/lib/pacman"
+class ChrootController:
+	def __init__(self):
+		self.__root = libcalamares.globalstorage.value('rootMountPoint')
+		self.__cache = os.path.join(self.__root, "var/cache/pacman/pkg")
+		self.__requirements = libcalamares.job.configuration.get('requirements', [])
+		self.__packages = libcalamares.job.configuration.get('packages', [])
 
-	try:
-		subprocess.call(["pacman", "-Sy", "--noconfirm", "--cachedir", cache_dir, "--root", root_dir, pkg])
-	except subprocess.CalledProcessError as e:
-		return "Cannot install pacman.", "pacman terminated with exit code {}.".format(e.returncode)
+	@property
+	def root(self):
+		return self.__root
 
-	try:
-		target_env_call(["pacman-key", "--init"])
-		target_env_call(["pacman-key", "--populate", "archlinux", "manjaro"])
-	except subprocess.CalledProcessError as e:
-		debug("Cannot init and populate keyring", "'pacman-key' terminated with exit code {}.".format(e.returncode))
+	@property
+	def packages(self):
+		return self.__packages
+
+	@property
+	def cache(self):
+		return self.__cache
+
+	@property
+	def requirements(self):
+		return self.__requirements
+
+	def install(self, pkg):
+		try:
+			check_call(["pacman", "-Sy", "--noconfirm", "--cachedir", self.cache, "--root", self.root, pkg])
+		except CalledProcessError as e:
+			libcalamares.utils.debug("Cannot install pacman.", "pacman terminated with exit code {}.".format(e.returncode))
+
+	def copy_pacmmirrors_conf(self):
+		shutil.copy2("/etc/pacman-mirrors.conf", "{!s}/etc/".format(self.root))
 
 
+	def copy_mirrorlist(self):
+		shutil.copy2("/etc/pacman.d/mirrorlist", "{!s}/etc/pacman.d/".format(self.root))
+
+	def rank_mirrors(self):
+		try:
+			target_env_call(["pacman-mirrors", "-g", "-m", "rank"])
+		except CalledProcessError as e:
+			libcalamares.utils.debug("Cannot rank mirrors", "pacman-mirrors terminated with exit code {}.".format(e.returncode))
+
+	def init_keyrings(self):
+			try:
+				target_env_call(["pacman-key", "--init"])
+				target_env_call(["pacman-key", "--populate", "archlinux", "manjaro"])
+			except CalledProcessError as e:
+				libcalamares.utils.debug("Cannot init and populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
+
+	def prepare(self):
+		for d in self.requirements:
+			path = self.root + d['directory']
+			if not os.path.exists(path):
+				cal_umask = os.umask(0)
+				libcalamares.utils.debug("Create {}.".format(d['directory']))
+				os.makedirs(path, mode=0o755)
+				os.chmod(os.path.join(self.root, "run"), 0o755)
+				os.umask(cal_umask)
+				self.copy_pacmmirrors_conf()
+
+	def run(self):
+		self.prepare()
+		for p in self.packages:
+			self.install(p)
+			if p == "pacman":
+				self.init_keyrings()
+				self.copy_mirrorlist()
+				self.rank_mirrors()
 
 
-def prepare_pac(root_dir, dirs):
-
-	for d in dirs:
-		name = root_dir + d['name']
-
-		if not os.path.exists(name):
-			os.makedirs(name, d['mode'])
+		return None
 
 
 def run():
-	""" Create chroot apifs """
+	""" Create chroot apifs and install pacman and kernel """
 
-	rootMountPoint = libcalamares.globalstorage.value('rootMountPoint')
+	targetRoot = ChrootController()
 
-	requirements = libcalamares.job.configuration.get('requirements', [])
-
-	prepare_pac(rootMountPoint, requirements)
-
-	inst_pac(rootMountPoint, "pacman")
-
-	return None
+	return targetRoot.run()
