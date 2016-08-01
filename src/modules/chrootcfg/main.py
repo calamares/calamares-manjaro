@@ -22,84 +22,84 @@ import libcalamares
 import subprocess
 
 from subprocess import check_call, CalledProcessError
-from libcalamares.utils import target_env_call
+from libcalamares.utils import target_env_call, check_target_env_call
 
 class ChrootController:
-	def __init__(self, root_dir, reqs):
-		self._root = root_dir
-		self._pkgcache = root_dir + "/var/cache/pacman/pkg"
-		self._reqdirs = reqs
+	def __init__(self):
+		self.__root = libcalamares.globalstorage.value('rootMountPoint')
+		self.__cache = os.path.join(self.__root, "var/cache/pacman/pkg")
+		self.__requirements = libcalamares.job.configuration.get('requirements', [])
+		self.__packages = libcalamares.job.configuration.get('packages', [])
 
 	@property
 	def root(self):
-		return self._root
+		return self.__root
 
 	@property
-	def pkgcache(self):
-		return self._pkgcache
+	def packages(self):
+		return self.__packages
 
 	@property
-	def reqdirs(self):
-		return self._reqdirs
+	def cache(self):
+		return self.__cache
 
-	def rank_mirrors(self):
-		try:
-			target_env_call(["pacman-mirrors",  "-g", "-m", "rank"])
-		except CalledProcessError as e:
-			debug("Cannot rank mirrors", "pacman-mirrors terminated with exit code {}.".format(e.returncode))
-
+	@property
+	def requirements(self):
+		return self.__requirements
 
 	def install(self, pkg):
 		try:
-			check_call(["pacman", "-Sy", "--noconfirm", "--cachedir", self.pkgcache, "--root", self.root, pkg])
+			check_call(["pacman", "-Sy", "--noconfirm", "--cachedir", self.cache, "--root", self.root, pkg])
 		except CalledProcessError as e:
-			debug("Cannot install pacman.", "pacman terminated with exit code {}.".format(e.returncode))
+			libcalamares.utils.debug("Cannot install pacman.", "pacman terminated with exit code {}.".format(e.returncode))
 
-		try:
-			target_env_call(["pacman-key", "--init"])
-			target_env_call(["pacman-key", "--populate", "archlinux", "manjaro"])
-		except CalledProcessError as e:
-			debug("Cannot init and populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
-
-	def copy_pm_conf(self):
+	def copy_pacmmirrors_conf(self):
 		shutil.copy2("/etc/pacman-mirrors.conf", "{!s}/etc/".format(self.root))
 
 
 	def copy_mirrorlist(self):
 		shutil.copy2("/etc/pacman.d/mirrorlist", "{!s}/etc/pacman.d/".format(self.root))
 
+	def rank_mirrors(self):
+		try:
+			target_env_call(["pacman-mirrors", "-g", "-m", "rank"])
+		except CalledProcessError as e:
+			libcalamares.utils.debug("Cannot rank mirrors", "pacman-mirrors terminated with exit code {}.".format(e.returncode))
 
-	def prepare(self, dirs):
-		for d in dirs:
-			name = self.root + d['name']
-			if not os.path.exists(name):
+	def init_keyrings(self):
+			try:
+				target_env_call(["pacman-key", "--init"])
+				target_env_call(["pacman-key", "--populate", "archlinux", "manjaro"])
+			except CalledProcessError as e:
+				libcalamares.utils.debug("Cannot init and populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
+
+	def prepare(self):
+		for d in self.requirements:
+			path = self.root + d['directory']
+			if not os.path.exists(path):
 				cal_umask = os.umask(0)
-
-				os.makedirs(name, mode=0o755)
-
-				run_dir = self.root + "/run"
-
-				os.chmod(run_dir, mode=0o755)
-
+				libcalamares.utils.debug("Create {}.".format(d['directory']))
+				os.makedirs(path, mode=0o755)
+				os.chmod(os.path.join(self.root, "run"), 0o755)
 				os.umask(cal_umask)
-
-				self.copy_pm_conf()
-
+				self.copy_pacmmirrors_conf()
 
 	def run(self):
-		self.prepare(self.reqdirs)
-		self.install("pacman")
-		self.copy_mirrorlist()
-		self.rank_mirrors()
+		self.prepare()
+		for p in self.packages:
+			self.install(p)
+			if p == "pacman":
+				self.init_keyrings()
+				self.copy_mirrorlist()
+				self.rank_mirrors()
+
+
+		return None
 
 
 def run():
-	""" Create chroot apifs """
+	""" Create chroot apifs and install pacman and kernel """
 
-	rootMountPoint = libcalamares.globalstorage.value('rootMountPoint')
+	targetRoot = ChrootController()
 
-	requirements = libcalamares.job.configuration.get('requirements', [])
-
-	target = ChrootController(rootMountPoint, requirements)
-
-	return target.run()
+	return targetRoot.run()
