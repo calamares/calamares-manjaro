@@ -19,46 +19,98 @@
 import os
 import shutil
 import libcalamares
-import subprocess
 
-from subprocess import check_call, CalledProcessError
-from libcalamares.utils import target_env_call, check_target_env_call
+from subprocess import call, CalledProcessError
+from libcalamares.utils import target_env_call
+
+class PacmanController:
+	def __init__(self):
+		self.__operations = libcalamares.globalstorage.value("packageOperations")
+
+	@property
+	def operations(self):
+		return self.__operations
+
+	def install(self, local=False):
+		if local:
+			flags = "-U"
+		else:
+			flags = "-Sy"
+
+		try:
+			target_env_call(["pacman", flags, "--noconfirm"] + self.operations["install"])
+		except CalledProcessError as e:
+			libcalamares.utils.debug("Cannot install selected packages.", "pacman terminated with exit code {}.".format(e.returncode))
+
+	def remove(self):
+		try:
+			target_env_call(["pacman", "-Rs", "--noconfirm"] + self.operations["remove"])
+		except CalledProcessError as e:
+			libcalamares.utils.debug("Cannot remove selected packages.", "pacman terminated with exit code {}.".format(e.returncode))
+
 
 class ChrootController:
 	def __init__(self):
 		self.__root = libcalamares.globalstorage.value('rootMountPoint')
-		self.__cache = os.path.join(self.__root, "var/cache/pacman/pkg")
+		self.__directories = libcalamares.job.configuration.get('directories', [])
 		self.__requirements = libcalamares.job.configuration.get('requirements', [])
-		self.__packages = libcalamares.job.configuration.get('packages', [])
+		self.__keyrings = libcalamares.job.configuration.get('keyrings', [])
+		if "branch" in libcalamares.job.configuration:
+			self.__branch = libcalamares.job.configuration["branch"]
+		else:
+			self.__branch = ""
+		self.__pacman = PacmanController()
 
 	@property
 	def root(self):
 		return self.__root
 
 	@property
-	def packages(self):
-		return self.__packages
+	def pacman(self):
+		return self.__pacman
 
 	@property
-	def cache(self):
-		return self.__cache
+	def branch(self):
+		return self.__branch
+
+	@property
+	def keyrings(self):
+		return self.__keyrings
 
 	@property
 	def requirements(self):
 		return self.__requirements
 
-	def install(self, pkg):
+	@property
+	def directories(self):
+		return self.__directories
+
+	def initilize(self):
 		try:
-			check_call(["pacman", "-Sy", "--noconfirm", "--cachedir", self.cache, "--root", self.root, pkg])
+			call(["pacman", "-Sy", "--noconfirm", "--cachedir", os.path.join(self.root, "var/cache/pacman/pkg"), "--root", self.root] + self.requirements)
 		except CalledProcessError as e:
 			libcalamares.utils.debug("Cannot install pacman.", "pacman terminated with exit code {}.".format(e.returncode))
 
-	def copy_pacmmirrors_conf(self):
-		shutil.copy2("/etc/pacman-mirrors.conf", "{!s}/etc/".format(self.root))
+	def copy_pacman_mmirrors_conf(self):
+		if os.path.exists("/etc/resolv.conf"):
+			try:
+				shutil.copy2("/etc/pacman-mirrors.conf", "{!s}/etc/".format(self.root))
+			except FileNotFoundError as e:
+				libcalamares.utils.debug("Cannot copy pacman-mirrors.conf {}".format(e.returncode))
 
+	def copy_resolv_conf(self):
+		if os.path.exists("/etc/resolv.conf"):
+			try:
+				shutil.copy2("/etc/resolv.conf", "{!s}/etc/".format(self.root))
+			except FileNotFoundError as e:
+				libcalamares.utils.debug("Cannot copy resolv.conf {}".format(e.returncode))
 
 	def copy_mirrorlist(self):
-		shutil.copy2("/etc/pacman.d/mirrorlist", "{!s}/etc/pacman.d/".format(self.root))
+		if os.path.exists("/etc/pacman.d/mirrorlist"):
+			try:
+				shutil.copy2("/etc/pacman.d/mirrorlist", "{!s}/etc/pacman.d/".format(self.root))
+			except FileNotFoundError as e:
+				libcalamares.utils.debug("Cannot copy mirrorlist {}".format(e.returncode))
 
 	def rank_mirrors(self):
 		try:
@@ -66,40 +118,56 @@ class ChrootController:
 		except CalledProcessError as e:
 			libcalamares.utils.debug("Cannot rank mirrors", "pacman-mirrors terminated with exit code {}.".format(e.returncode))
 
-	def init_keyrings(self):
+	def populate_keyring(self, keys):
+		try:
+			target_env_call(["pacman-key", "--populate"] + keys)
+		except CalledProcessError as e:
+			libcalamares.utils.debug("Cannot populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
+
+	def init_keyring(self):
 			try:
 				target_env_call(["pacman-key", "--init"])
-				target_env_call(["pacman-key", "--populate", "archlinux", "manjaro"])
 			except CalledProcessError as e:
-				libcalamares.utils.debug("Cannot init and populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
+				libcalamares.utils.debug("Cannot init keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
 
 	def prepare(self):
-		for d in self.requirements:
-			path = self.root + d['directory']
+		for target in self.directories:
+			path = self.root + target["name"]
 			if not os.path.exists(path):
 				cal_umask = os.umask(0)
-				libcalamares.utils.debug("Create {}.".format(d['directory']))
+				libcalamares.utils.debug("Create: {}".format(path))
+				#mod = oct(target["mode"])
+				#libcalamares.utils.debug("Mode: {}".format(mod))
 				os.makedirs(path, mode=0o755)
 				os.chmod(os.path.join(self.root, "run"), 0o755)
 				os.umask(cal_umask)
-				self.copy_pacmmirrors_conf()
+				if  self.branch:
+					self.copy_pacman_mmirrors_conf()
 
-	def run(self):
+				self.copy_resolv_conf()
+
+	def run(self, rank=False):
 		self.prepare()
-		for p in self.packages:
-			self.install(p)
-			if p == "pacman":
-				self.init_keyrings()
-				self.copy_mirrorlist()
-				self.rank_mirrors()
+		self.initilize()
+		self.init_keyring()
+		self.populate_keyring(self.keyrings)
+		self.copy_mirrorlist()
+		if rank is True:
+			self.rank_mirrors()
 
+		for op in self.pacman.operations.keys():
+			if op == "install":
+				self.pacman.install()
+			elif op == "remove":
+				self.pacman.remove()
+			elif op == "localInstall":
+				self.pacman.install(local=True)
 
 		return None
 
-
 def run():
-	""" Create chroot apifs and install pacman and kernel """
+	""" Create chroot dirs and install pacman, kernel and netinstall selection """
 
 	targetRoot = ChrootController()
 
-	return targetRoot.run()
+	return targetRoot.run(rank=True)
