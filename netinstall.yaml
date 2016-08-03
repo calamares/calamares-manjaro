@@ -57,6 +57,102 @@
         - os-prober
         - intel-ucode
         - sudo
+        - haveged
+        - rsync
+        - nfs-utils
+        - acpid
+        - cpupower
+        - tlp
+        - networkmanager
+        - alsa-utils
+        - ntp
+        - manjaro-hotfixes
+        - avahi
+        - inxi
+
+- name: "base-openrc"
+  description: "Command line interface (net) openrc"
+  packages:
+        packages:
+        - bzip2
+        - coreutils
+        - cryptsetup-openrc
+        - device-mapper-openrc
+        - dbus-openrc
+        - dhcpcd-openrc
+        - diffutils
+        - file
+        - gawk
+        - gcc-libs
+        - gettext
+        - glibc
+        - grep
+        - gzip
+        - inetutils-openrc
+        - iproute2
+        - iputils
+        - jfsutils
+        - less
+        - licenses
+        - logrotate
+        - lvm2-openrc
+        - man-db
+        - man-pages
+        - manjaro-system
+        - mdadm-openrc
+        - mhwd
+        - mhwd-db
+        - nano
+        - pciutils
+        - pcmciautils
+        - procps-ng
+        - psmisc
+        - reiserfsprogs
+        - s-nail
+        - sed
+        - shadow
+        - sysfsutils
+        - eudev-systemdcompat
+        - tar
+        - texinfo
+        - usbutils
+        - util-linux
+        - vi
+        - which
+        - xfsprogs
+        - tcp_wrappers
+        - linux44
+        - grub
+        - lsb-release
+        - memtest86+
+        - os-prober
+        - intel-ucode
+        - sudo
+        - netifrc
+        - haveged-openrc
+        - rsync-openrc
+        - nfs-utils-openrc
+        - acpid-openrc
+        - cpupower-openrc
+        - consolekit-openrc
+        - displaymanager-openrc
+        - pm-utils
+        - cgmanager-openrc
+        - networkmanager-consolekit
+        - networkmanager-openrc
+        - alsa-utils-openrc
+        - ntp-openrc
+        - avahi-openrc
+        - manjaro-hotfixes
+        - inxi
+
+- name: "desktop-openrc"
+  description: "Desktop (net) openrc"
+  packages:
+        - consolekit-openrc
+        - displaymanager-openrc
+        - cgmanager-openrc
+        - sddm-consolekit
 
 - name: "base-devel"
   description: "Development packages"
@@ -122,3 +218,85 @@
         - lxtask-gtk3
         - gvfs
         - qupzilla
+
+- name: "plasma"
+  description: "Plasma5 Desktop"
+  packages:
+        - bluedevil
+        - breeze
+        - breeze-gtk
+        - drkonqi
+        - kactivitymanagerd
+        - kde-cli-tools
+        - kde-gtk-config
+        - kdecoration
+        - kdeplasma-addons
+        - kgamma5
+        - khotkeys
+        - kinfocenter
+        - kmenuedit
+        - kscreen
+        - kscreenlocker
+        - ksshaskpass
+        - ksysguard
+        - kuiserver
+        - kwallet-pam
+        - kwayland-integration
+        - kwin
+        - kwrited
+        - libkscreen
+        - libksysguard
+        - milou
+        - oxygen
+        - plasma-desktop
+        - plasma-gpg-agent
+        - plasma-integration
+        - plasma-mediacenter
+        - plasma-nm
+        - plasma-pa
+        - plasma-sdk
+        - plasma-ssh-agent
+        - plasma-workspace
+        - plasma-workspace-wallpapers
+        - polkit-kde-agent
+        - powerdevil
+        - sddm-kcm
+        - systemsettings
+        - user-manager
+        - plasma5-themes-maia
+        - sddm-maia-theme
+        - ark
+        - dolphin
+        - konsole
+        - kate
+        - kwrite
+        - manjaro-welcome
+        - manjaro-kde-minimal-settings
+
+- name: "xfce"
+  description: "XFCE Desktop"
+  packages:
+        - exo
+        - garcon
+        - gtk-xfce-engine
+        - thunar
+        - thunar-volman
+        - tumbler
+        - xfce4-appfinder
+        - xfce4-mixer
+        - xfce4-panel
+        - xfce4-power-manager
+        - xfce4-session
+        - xfce4-settings
+        - xfce4-terminal
+        - xfconf
+        - xfdesktop
+        - xfwm4
+        - xfwm4-themes
+        - lightdm-gtk-greeter
+        - manjaro-welcome
+        - midori
+        - mousepad
+        - pamac
+        - open-fuse-iso
+        - manjaro-xfce-minimal-settings
