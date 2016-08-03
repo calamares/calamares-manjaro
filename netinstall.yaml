@@ -73,7 +73,6 @@
 - name: "base-openrc"
   description: "Command line interface (net) openrc"
   packages:
-        packages:
         - bzip2
         - coreutils
         - cryptsetup-openrc
