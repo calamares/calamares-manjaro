@@ -21,7 +21,7 @@ import shutil
 import libcalamares
 
 from subprocess import call, CalledProcessError
-from libcalamares.utils import target_env_call, target_env_output
+from libcalamares.utils import target_env_call, check_target_env_output
 
 class PacmanController:
 	def __init__(self):
