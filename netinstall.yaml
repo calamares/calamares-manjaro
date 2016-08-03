@@ -154,9 +154,79 @@
         - util-linux
         - which
 
+- name: "xfce-minimal"
+  description: "Xfce Desktop"
+  packages:
+        - accountsservice
+        - gconf
+        - gksu
+        - gnome-keyring
+        - gnome-vfs
+        - gparted
+        - gst-libav
+        - gvfs
+        - lightdm-gtk-greeter
+        - lightdm-gtk-greeter-settings
+        - light-locker
+        - maia-wallpaper
+        - manjaro-alsa
+        - manjaro-artwork
+        - manjaro-backgrounds
+        - manjaro-base-skel
+        - manjaro-pulse
+        - manjaro-settings-manager-notifier
+        - manjaro-welcome
+        - manjaro-xfce-minimal-settings
+        - menulibre
+        - midori
+        - mousepad
+        - mugshot
+        - netctl
+        - networkmanager
+        - network-manager-applet
+        - networkmanager-dispatcher-ntpd
+        - open-fuse-iso
+        - openresolv
+        - pa-applet
+        - pamac
+        - pavucontrol
+        - plymouth-theme-manjaro-elegant
+        - pulseaudio-ctl
+        - pulseaudio-zeroconf
+        - qpdfview
+        - qt5ct
+        - qt5-styleplugins
+        - vertex-maia-icon-theme
+        - vertex-maia-themes
+        - xcursor-maia
+        - xcursor-simpleandsoft
+        - xcursor-vanilla-dmz-aa
+        - xfce4-appfinder
+        - xfce4-battery-plugin
+        - xfce4-clipman-plugin
+        - xfce4-notifyd
+        - xfce4-panel
+        - xfce4-power-manager
+        - xfce4-screenshooter
+        - xfce4-session
+        - xfce4-settings
+        - xfce4-taskmanager
+        - xfce4-terminal
+        - xfce4-whiskermenu-plugin
+        - xfce4-xkb-plugin
+        - xfdesktop
+        - xfwm4
+        - xorg-xkill
+
 - name: "lxqt"
   description: "LXQT Desktop"
   packages:
+        - andromeda-icon-theme
+        - andromeda-wallpaper
+        - compton
+        - feh
+        - gvfs
+        - kwrite
         - lxqt-about
         - lxqt-common
         - lxqt-config
@@ -170,23 +240,17 @@
         - lxqt-runner
         - lxqt-session
         - lxqt-sudo
-        - openbox
-        - pcmanfm-qt
-        - manjaro-lxqt-minimal-settings
-        - qterminal
-        - xcursor-breeze
-        - andromeda-icon-theme
-        - andromeda-wallpaper
-        - vertex-maia-themes
-        - obmenu-generator
-        - feh
-        - openbox-themes
-        - tint2
-        - sddm
-        - compton
-        - kwrite
-        - xarchiver
-        - network-manager-applet
         - lxtask-gtk3
-        - gvfs
+        - manjaro-lxqt-minimal-settings
+        - network-manager-applet
+        - obmenu-generator
+        - openbox
+        - openbox-themes
+        - pcmanfm-qt
+        - qterminal
         - qupzilla
+        - sddm
+        - tint2
+        - vertex-maia-themes
+        - xarchiver
+        - xcursor-breeze
