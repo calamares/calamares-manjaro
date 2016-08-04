@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
+# === This file is part of Calamares - <http://github.com/calamares> ===
+#
 #   Copyright 2016, Artoo <artoo@manjaro.org>
 #
 #   Calamares is free software: you can redistribute it and/or modify
@@ -19,13 +21,15 @@
 import os
 import shutil
 import libcalamares
+import libcalamares.job
+
 
 from subprocess import call, CalledProcessError
-from libcalamares.utils import target_env_call, check_target_env_output
+from libcalamares.utils import target_env_call, check_target_env_output, debug
 
 class PacmanController:
 	def __init__(self):
-		self.__operations = libcalamares.globalstorage.value("packageOperations")
+		self.__operations = globalstorage.value("packageOperations")
 
 	@property
 	def operations(self):
@@ -51,23 +55,23 @@ class PacmanController:
 		try:
 			target_env_call(["pacman", flags, "--noconfirm"] + self.operations["install"])
 		except CalledProcessError as e:
-			libcalamares.utils.debug("Cannot install selected packages.", "pacman terminated with exit code {}.".format(e.returncode))
+			debug("Cannot install selected packages.", "pacman terminated with exit code {}.".format(e.returncode))
 
 	def remove(self):
 		try:
 			target_env_call(["pacman", "-Rs", "--noconfirm"] + self.operations["remove"])
 		except CalledProcessError as e:
-			libcalamares.utils.debug("Cannot remove selected packages.", "pacman terminated with exit code {}.".format(e.returncode))
+			debug("Cannot remove selected packages.", "pacman terminated with exit code {}.".format(e.returncode))
 
 
 class ChrootController:
 	def __init__(self):
-		self.__root = libcalamares.globalstorage.value('rootMountPoint')
-		self.__directories = libcalamares.job.configuration.get('directories', [])
-		self.__requirements = libcalamares.job.configuration.get('requirements', [])
-		self.__keyrings = libcalamares.job.configuration.get('keyrings', [])
-		if "branch" in libcalamares.job.configuration:
-			self.__branch = libcalamares.job.configuration["branch"]
+		self.__root = globalstorage.value('rootMountPoint')
+		self.__directories = configuration.get('directories', [])
+		self.__requirements = configuration.get('requirements', [])
+		self.__keyrings = configuration.get('keyrings', [])
+		if "branch" in configuration:
+			self.__branch = configuration["branch"]
 		else:
 			self.__branch = ""
 
@@ -106,49 +110,49 @@ class ChrootController:
 		try:
 			call(["pacman", "-Sy", "--noconfirm", "--cachedir", os.path.join(self.root, "var/cache/pacman/pkg"), "--root", self.root] + self.requirements)
 		except CalledProcessError as e:
-			libcalamares.utils.debug("Cannot install pacman.", "pacman terminated with exit code {}.".format(e.returncode))
+			debug("Cannot install pacman.", "pacman terminated with exit code {}.".format(e.returncode))
 
 	def copy_file(self, file):
 		if os.path.exists(os.path.join("/",file)):
 			try:
 				shutil.copy2(os.path.join("/",file), os.path.join(self.root, file))
 			except FileNotFoundError as e:
-				libcalamares.utils.debug("Cannot copy {}".format(os.path.join("/",file)))
+				debug("Cannot copy {}".format(os.path.join("/",file)))
 
 	def rank_mirrors(self):
 		try:
-			target_env_call(["pacman-mirrors", "-g", "-m", "rank"])
+			target_env_call(["pacman-mirrors", "-g", "-m", "rank", "-b", self.branch])
 		except CalledProcessError as e:
-			libcalamares.utils.debug("Cannot rank mirrors", "pacman-mirrors terminated with exit code {}.".format(e.returncode))
+			debug("Cannot rank mirrors", "pacman-mirrors terminated with exit code {}.".format(e.returncode))
 
 	def populate_keyring(self):
 		try:
 			target_env_call(["pacman-key", "--populate"] + self.keyrings)
 		except CalledProcessError as e:
-			libcalamares.utils.debug("Cannot populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
+			debug("Cannot populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
 
 	def init_keyring(self):
 			try:
 				target_env_call(["pacman-key", "--init"])
 			except CalledProcessError as e:
-				libcalamares.utils.debug("Cannot init keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
+				debug("Cannot init keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
 
 	def make_dirs(self):
 		for target in self.directories:
 			dir = self.root + target["name"]
 			if not os.path.exists(dir):
-				libcalamares.utils.debug("Create: {}".format(dir))
+				debug("Create: {}".format(dir))
 				mod = int(target["mode"],8)
-				libcalamares.utils.debug("Mode: {}".format(oct(mod)))
+				debug("Mode: {}".format(oct(mod)))
 				os.makedirs(dir, mode=mod)
 
 	def prepare(self):
 		self.make_dirs()
 		path = os.path.join(self.root, "run")
-		libcalamares.utils.debug("Fix permissions: {}".format(path))
+		debug("Fix permissions: {}".format(path))
 		os.chmod(path, 0o755)
 		os.umask(self.umask)
-		if  self.branch:
+		if self.branch:
 			self.copy_file('etc/pacman-mirrors.conf')
 
 		self.copy_file('etc/resolv.conf')
