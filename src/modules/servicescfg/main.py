@@ -27,26 +27,26 @@ from subprocess import CalledProcessError
 class ServicesController:
     def __init__(self):
         self.__services = configuration.get('services', [])
-       
+
     @property
     def services(self):
         return self.__services
-    
-    def run_rc(self, action):
-        for svc in self.services["enabled"]:
+
+    def update(self, action, status):
+        for svc in self.services[status]:
             try:
                 target_env_call(["rc-update", action, svc["name"], svc["runlevel"]])
-                debug("Enable service {}".format(svc["name"]))
+                debug(status + "service {}".format(svc["name"]))
             except CalledProcessError as e:
                 debug("Cannot update service {}".format(e.returncode))
-      
+
     def run(self):
         for key in self.services.keys():
             if key == "enabled":
-                self.run_rc("add")
+                self.update("add", "enabled")
             elif key == "disabled":
-                self.run_rc("del")
-                
+                self.update("del", "disabled")
+
         return None
 
 def run():
