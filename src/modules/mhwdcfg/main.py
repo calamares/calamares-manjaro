@@ -18,41 +18,77 @@
 
 import os
 import subprocess
+import shutil
+import argparse
 
 import libcalamares
 
-import shutil
-
 from libcalamares.utils import target_env_call
-from subprocess.call import check_call
+
+class MhwdController:
+	def __init__(self, root_dir):
+		self._xconf = "/etc/X11/xorg.conf"
+		self._video = getCmdLine(kernelline, "xdriver")
+		self._nonfree = getCmdLine(kernelline, "nonfree")
+		self._root = root_dir
+		self._cmd = "mhwd"
+
+	@staticmethod
+	def getCmdLine(kline, arg):
+		val = argparse.split(kline)
+
+		return val
+
+	@property
+	def xconf(self):
+		return self._xconf
+
+	@property
+	def video(self):
+		return self._video
+
+	@property
+	def root(self):
+		return self._root
+
+	@property
+	def cmd(self):
+		return self._cmd
+
+	@property
+	def nonfree(self):
+		return self._nonfree
+
+	def configureNetDrv(self):
+		target_env_call([self.cmd, "--auto", "pci", "free", 0200])
+		target_env_call([self.cmd, "--auto", "pci", "free", 0280])
+
+	def configureVideoDrv(self):
+		if self.nonfree = "yes" or self.nonfree = "true":
+			if self.video = "vesa":
+				target_env_call([self.cmd, "--install", "pci", "video", "video-vesa"])
+			else:
+				target_env_call([self.cmd, "--auto", "pci", "video", "nonfree", 0300])
+		else:
+			if self.video = "vesa":
+				target_env_call([self.cmd, "--install", "pci", "video", "video-vesa"])
+			else:
+				target_env_call([self.cmd, "--auto", "pci", "video", "free", 0300])
+
+	def run(self):
+		# Copy generated xorg.xonf to target
+		if os.path.exists(self.xconf):
+			shutil.copy2(self.xconf, os.path.join(self.root, 'etc/X11/xorg.conf'))
+
+		self.configureNetDrv()
+		self.configureVideoDrv()
+
 
 def run():
 	""" Configure the hardware """
 
-	install_path = libcalamares.globalstorage.value( "rootMountPoint" )
+	rootMountPoint = libcalamares.globalstorage.value( "rootMountPoint" )
 
-	# Copy generated xorg.xonf to target
-	if os.path.exists("/etc/X11/xorg.conf"):
-		shutil.copy2('/etc/X11/xorg.conf',
-		os.path.join(install_path, 'etc/X11/xorg.conf'))
+	mhwd = MhwdController(rootMountPoint)
 
-	# TODO: Maybe we can drop this
-	# Configure ALSA
-	# configure_alsa
-
-	# Set pulse
-	if os.path.exists("/usr/bin/pulseaudio-ctl"):
-		target_env_call(['pulseaudio-ctl', 'normal'])
-
-	# Save settings
-	target_env_call(['alsactl', '-f', '/etc/asound.state', 'store'])
-
-        # TODO: port mhwd script to python
-        path = '/usr/lib/calamares/modules/drivercfg/'
-
-
-	mhwd_script = path + "mhwd.sh"
-        #try:
-        check_call(["/usr/bin/bash", mhwd_script, install_path])
-
-	return None
+	return mhwd.run()

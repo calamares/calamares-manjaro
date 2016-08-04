@@ -1,0 +1,1 @@
+initrd=/manjaro/boot/intel_ucode.img,/manjaro/boot/x86_64/manjaro.img misobasedir=manjaro misolabel=MJROCURR nouveau.modeset=1 i915.modeset=1 radeon.modeset=1 logo.nologo overlay=free quiet vga=0x317  lang=de_DE keytable=de-latin1-nodeadkeys layout=de
