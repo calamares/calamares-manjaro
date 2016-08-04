@@ -21,7 +21,7 @@ import shutil
 import libcalamares
 
 from subprocess import call, CalledProcessError
-from libcalamares.utils import target_env_call
+from libcalamares.utils import target_env_call, check_target_env_output
 
 class PacmanController:
 	def __init__(self):
@@ -30,6 +30,17 @@ class PacmanController:
 	@property
 	def operations(self):
 		return self.__operations
+
+	def run(self):
+		for op in self.operations.keys():
+			if op == "install":
+				self.install()
+			elif op == "remove":
+				self.remove()
+			elif op == "localInstall":
+				self.install(local=True)
+
+		return None
 
 	def install(self, local=False):
 		if local:
@@ -59,11 +70,17 @@ class ChrootController:
 			self.__branch = libcalamares.job.configuration["branch"]
 		else:
 			self.__branch = ""
+
 		self.__pacman = PacmanController()
+		self.__umask = os.umask(0)
 
 	@property
 	def root(self):
 		return self.__root
+	
+	@property
+	def umask(self):
+		return self.__umask
 
 	@property
 	def pacman(self):
@@ -91,26 +108,12 @@ class ChrootController:
 		except CalledProcessError as e:
 			libcalamares.utils.debug("Cannot install pacman.", "pacman terminated with exit code {}.".format(e.returncode))
 
-	def copy_pacman_mmirrors_conf(self):
-		if os.path.exists("/etc/resolv.conf"):
+	def copy_file(self, file):
+		if os.path.exists(os.path.join("/",file)):
 			try:
-				shutil.copy2("/etc/pacman-mirrors.conf", "{!s}/etc/".format(self.root))
+				shutil.copy2(os.path.join("/",file), os.path.join(self.root, file))
 			except FileNotFoundError as e:
-				libcalamares.utils.debug("Cannot copy pacman-mirrors.conf {}".format(e.returncode))
-
-	def copy_resolv_conf(self):
-		if os.path.exists("/etc/resolv.conf"):
-			try:
-				shutil.copy2("/etc/resolv.conf", "{!s}/etc/".format(self.root))
-			except FileNotFoundError as e:
-				libcalamares.utils.debug("Cannot copy resolv.conf {}".format(e.returncode))
-
-	def copy_mirrorlist(self):
-		if os.path.exists("/etc/pacman.d/mirrorlist"):
-			try:
-				shutil.copy2("/etc/pacman.d/mirrorlist", "{!s}/etc/pacman.d/".format(self.root))
-			except FileNotFoundError as e:
-				libcalamares.utils.debug("Cannot copy mirrorlist {}".format(e.returncode))
+				libcalamares.utils.debug("Cannot copy {}".format(os.path.join("/",file)))
 
 	def rank_mirrors(self):
 		try:
@@ -118,9 +121,9 @@ class ChrootController:
 		except CalledProcessError as e:
 			libcalamares.utils.debug("Cannot rank mirrors", "pacman-mirrors terminated with exit code {}.".format(e.returncode))
 
-	def populate_keyring(self, keys):
+	def populate_keyring(self):
 		try:
-			target_env_call(["pacman-key", "--populate"] + keys)
+			target_env_call(["pacman-key", "--populate"] + self.keyrings)
 		except CalledProcessError as e:
 			libcalamares.utils.debug("Cannot populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
 
@@ -130,40 +133,36 @@ class ChrootController:
 			except CalledProcessError as e:
 				libcalamares.utils.debug("Cannot init keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
 
-	def prepare(self):
+	def make_dirs(self):
 		for target in self.directories:
-			path = self.root + target["name"]
-			if not os.path.exists(path):
-				cal_umask = os.umask(0)
-				libcalamares.utils.debug("Create: {}".format(path))
-				#mod = oct(target["mode"])
-				#libcalamares.utils.debug("Mode: {}".format(mod))
-				os.makedirs(path, mode=0o755)
-				os.chmod(os.path.join(self.root, "run"), 0o755)
-				os.umask(cal_umask)
-				if  self.branch:
-					self.copy_pacman_mmirrors_conf()
+			dir = self.root + target["name"]
+			if not os.path.exists(dir):
+				libcalamares.utils.debug("Create: {}".format(dir))
+				mod = int(target["mode"],8)
+				libcalamares.utils.debug("Mode: {}".format(oct(mod)))
+				os.makedirs(dir, mode=mod)
 
-				self.copy_resolv_conf()
+	def prepare(self):
+		self.make_dirs()
+		path = os.path.join(self.root, "run")
+		libcalamares.utils.debug("Fix permissions: {}".format(path))
+		os.chmod(path, 0o755)
+		os.umask(self.umask)
+		if  self.branch:
+			self.copy_file('etc/pacman-mirrors.conf')
+
+		self.copy_file('etc/resolv.conf')
 
 	def run(self, rank=False):
 		self.prepare()
 		self.initilize()
 		self.init_keyring()
-		self.populate_keyring(self.keyrings)
-		self.copy_mirrorlist()
+		self.populate_keyring()
+		self.copy_file('etc/pacman.d/mirrorlist')
 		if rank is True:
 			self.rank_mirrors()
 
-		for op in self.pacman.operations.keys():
-			if op == "install":
-				self.pacman.install()
-			elif op == "remove":
-				self.pacman.remove()
-			elif op == "localInstall":
-				self.pacman.install(local=True)
-
-		return None
+		return self.pacman.run()
 
 def run():
 	""" Create chroot dirs and install pacman, kernel and netinstall selection """

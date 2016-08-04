@@ -1,13 +1,12 @@
 - name: "base"
   description: "Command line interface (net)"
-  #hidden: true
-  #selected: true
   packages:
         - bzip2
         - coreutils
-        - cryptsetup
-        - device-mapper
-        - dhcpcd
+        - cryptsetup-openrc
+        - device-mapper-openrc
+        - dbus-openrc
+        - dhcpcd-openrc
         - diffutils
         - file
         - gawk
@@ -16,22 +15,21 @@
         - glibc
         - grep
         - gzip
-        - inetutils
+        - inetutils-openrc
         - iproute2
         - iputils
         - jfsutils
         - less
         - licenses
         - logrotate
-        - lvm2
+        - lvm2-openrc
         - man-db
         - man-pages
         - manjaro-system
-        - mdadm
+        - mdadm-openrc
         - mhwd
         - mhwd-db
         - nano
-        - netctl
         - pciutils
         - pcmciautils
         - procps-ng
@@ -41,7 +39,6 @@
         - sed
         - shadow
         - sysfsutils
-        - systemd-sysvcompat
         - tar
         - texinfo
         - usbutils
@@ -57,17 +54,22 @@
         - os-prober
         - intel-ucode
         - sudo
-        - haveged
-        - rsync
-        - nfs-utils
-        - acpid
-        - cpupower
-        - tlp
-        - networkmanager
-        - alsa-utils
-        - ntp
+        - netifrc
+        - haveged-openrc
+        - rsync-openrc
+        - nfs-utils-openrc
+        - acpid-openrc
+        - cpupower-openrc
+        - consolekit-openrc
+        - displaymanager-openrc
+        - pm-utils
+        - cgmanager-openrc
+        - networkmanager-consolekit
+        - networkmanager-openrc
+        - alsa-utils-openrc
+        - ntp-openrc
+        - avahi-openrc
         - manjaro-hotfixes
-        - avahi
         - inxi
 
 - name: "base-devel"
@@ -134,6 +136,10 @@
         - lxtask-gtk3
         - gvfs
         - qupzilla
+        - consolekit-openrc
+        - displaymanager-openrc
+        - cgmanager-openrc
+        - sddm-consolekit
 
 - name: "plasma"
   description: "Plasma5 Desktop"
@@ -188,6 +194,10 @@
         - kwrite
         - manjaro-welcome
         - manjaro-kde-minimal-settings
+        - consolekit-openrc
+        - displaymanager-openrc
+        - cgmanager-openrc
+        - sddm-consolekit
 
 - name: "xfce"
   description: "XFCE Desktop"
@@ -216,3 +226,7 @@
         - pamac
         - open-fuse-iso
         - manjaro-xfce-minimal-settings
+        - consolekit-openrc
+        - displaymanager-openrc
+        - cgmanager-openrc
+        - sddm-consolekit
