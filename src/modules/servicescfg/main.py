@@ -3,8 +3,7 @@
 #
 # === This file is part of Calamares - <http://github.com/calamares> ===
 #
-#   Copyright 2014, Philip Müller <philm@manjaro.org>
-#   Copyright 2014, Teo Mrnjavac <teo@kde.org>
+#   Copyright 2016, Artoo <artoo@manjaro.org>
 #
 #   Calamares is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -20,13 +19,14 @@
 #   along with Calamares. If not, see <http://www.gnu.org/licenses/>.
 
 import libcalamares
+import libcalamares.job
 
 from libcalamares.utils import target_env_call, debug
 from subprocess import CalledProcessError
 
 class ServicesController:
     def __init__(self):
-        self.__services = libcalamares.job.configuration.get('services', [])
+        self.__services = configuration.get('services', [])
        
     @property
     def services(self):
@@ -36,6 +36,7 @@ class ServicesController:
         for svc in self.services["enabled"]:
             try:
                 target_env_call(["rc-update", action, svc["name"], svc["runlevel"]])
+                debug("Enable service {}".format(svc["name"]))
             except CalledProcessError as e:
                 debug("Cannot update service {}".format(e.returncode))
       
