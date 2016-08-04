@@ -18,95 +18,78 @@
 
 import os
 import subprocess
-import shutil
-import argparse
 import shlex
 
 import libcalamares
-import libcalamares.globalstorage
 
-from libcalamares.utils import target_env_call
+from libcalamares.utils import target_env_call, debug
+from subprocess import call, CalledProcessError
 
 class MhwdController:
 	def __init__(self):
-		self._xconf = "/etc/X11/xorg.conf"
-		self.__videodrv = ""
-		self.__drvtype = ""
+		self.__video = ""
+		self.__buses = job.configuration.get('buses', [])
+		self.__hwids = job.configuration.get('hwids', [])
+		self.__islocal = job.configuration['local']
+		self.__repo = job.configuration['repo']
 		self.__root = globalstorage.value( "rootMountPoint" )
-		self.__cmd = "mhwd"
-		self.__kernelcmdline = subprocess.call(["cat", "/proc/cmdline"])
+		self.__kernelline = call(["cat", "/proc/cmdline"])
 
 	@property
-	def kernelcmdline(self):
-		return self.__kernelcmdline
-			
-	@property
-	def xconf(self):
-		return self.__xconf
+	def kernelline(self):
+		return self.__kernelline
 
 	@property
-	def videodrv(self):
-		return self.__videodrv
+	def video(self):
+		opts = shlex.split(self.kernelline)
+		for op in opts:
+			if '=' not in op:
+				continue
 
-	@videodrv.setter
-	def videodrv(self, drv):
-		self.__videodrv = drv
-		
+			key, val = op.split('=', 1)
+			if key == "overlay":
+				self.__video == str(val)
+				
+		return self.__video
+
 	@property
 	def root(self):
 		return self.__root
-
-	@property
-	def cmd(self):
-		return self.__cmd
-
-	@property
-	def drvtype(self):
-		return self.__drvtype
 	
-	@drvtype.setter
-	def drvtype(self, val):
-		self.__drvtype = val
+	@property
+	def islocal(self):
+		return self.__islocal
 	
-	def get_cmdline(self, key):
-			options = shlex.split(self.kernelcmdline)
-			params = {}
-			for arg in options:
-				if '=' not in arg:
-					continue
-				
-				key, val = arg.split('=', 1)
-				params[key] = val
-				
-				return params
-			
-	def configureNetDrv(self):
-		target_env_call([self.cmd, "--auto", "pci", "free", 0200])
-		target_env_call([self.cmd, "--auto", "pci", "free", 0280])
+	@property
+	def repo(self):
+		return self.__repo
+	
+	@property
+	def hwids(self):
+		return self.__hwids
+	
+	@property
+	def buses(self):
+		return self.__buses
 
-	def configureVideoDrv(self):
+	def configure(self, bus, id):
+		args = ["mhwd", "-a", bus, self.video, id]
+		if self.local:
+			args += ["--pmconfig", self.repo]
 		
-		if self.nonfree = "yes" or self.nonfree = "true":
-			if self.video = "vesa":
-				target_env_call([self.cmd, "--install", "pci", "video", "video-vesa"])
-			else:
-				target_env_call([self.cmd, "--auto", "pci", "video", "nonfree", 0300])
-		else:
-			if self.video = "vesa":
-				target_env_call([self.cmd, "--install", "pci", "video", "video-vesa"])
-			else:
-				target_env_call([self.cmd, "--auto", "pci", "video", "free", 0300])
+		try:
+			target_env_call(args)
+		except CalledProcessError as e:
+			debug("Cannot configure drivers", "mhwd terminted with exit code {}.".format(e.returncode))
 
 	def run(self):
-		# Copy generated xorg.xonf to target
-		if os.path.exists(self.xconf):
-			shutil.copy2(self.xconf, os.path.join(self.root, 'etc/X11/xorg.conf'))
-			
-		#self.videodrv(self.get_cmdline("vga"))
-		self.drvtype(self.get_cmdline("overlay"))
-		self.configureNetDrv()
-		self.configureVideoDrv()
-
+		for b in self.bus:
+			if not self.local:
+				self.configure(self.buses[b], 0300)
+				self.configure(self.buses[b], 0200)
+			else:
+				self.configure(self.buses[b], 0300, self.repo)
+				self.configure(self.buses[b], 0200, self.repo)
 
 def run():
 	""" Configure the hardware """
