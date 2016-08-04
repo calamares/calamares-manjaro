@@ -20,50 +20,72 @@ import os
 import subprocess
 import shutil
 import argparse
+import shlex
 
 import libcalamares
+import libcalamares.globalstorage
 
 from libcalamares.utils import target_env_call
 
 class MhwdController:
-	def __init__(self, root_dir):
+	def __init__(self):
 		self._xconf = "/etc/X11/xorg.conf"
-		self._video = getCmdLine(kernelline, "xdriver")
-		self._nonfree = getCmdLine(kernelline, "nonfree")
-		self._root = root_dir
-		self._cmd = "mhwd"
+		self.__videodrv = ""
+		self.__drvtype = ""
+		self.__root = globalstorage.value( "rootMountPoint" )
+		self.__cmd = "mhwd"
+		self.__kernelcmdline = subprocess.call(["cat", "/proc/cmdline"])
 
-	@staticmethod
-	def getCmdLine(kline, arg):
-		val = argparse.split(kline)
-
-		return val
-
+	@property
+	def kernelcmdline(self):
+		return self.__kernelcmdline
+			
 	@property
 	def xconf(self):
-		return self._xconf
+		return self.__xconf
 
 	@property
-	def video(self):
-		return self._video
+	def videodrv(self):
+		return self.__videodrv
 
+	@videodrv.setter
+	def videodrv(self, drv):
+		self.__videodrv = drv
+		
 	@property
 	def root(self):
-		return self._root
+		return self.__root
 
 	@property
 	def cmd(self):
-		return self._cmd
+		return self.__cmd
 
 	@property
-	def nonfree(self):
-		return self._nonfree
-
+	def drvtype(self):
+		return self.__drvtype
+	
+	@drvtype.setter
+	def drvtype(self, val):
+		self.__drvtype = val
+	
+	def get_cmdline(self, key):
+			options = shlex.split(self.kernelcmdline)
+			params = {}
+			for arg in options:
+				if '=' not in arg:
+					continue
+				
+				key, val = arg.split('=', 1)
+				params[key] = val
+				
+				return params
+			
 	def configureNetDrv(self):
 		target_env_call([self.cmd, "--auto", "pci", "free", 0200])
 		target_env_call([self.cmd, "--auto", "pci", "free", 0280])
 
 	def configureVideoDrv(self):
+		
 		if self.nonfree = "yes" or self.nonfree = "true":
 			if self.video = "vesa":
 				target_env_call([self.cmd, "--install", "pci", "video", "video-vesa"])
@@ -79,7 +101,9 @@ class MhwdController:
 		# Copy generated xorg.xonf to target
 		if os.path.exists(self.xconf):
 			shutil.copy2(self.xconf, os.path.join(self.root, 'etc/X11/xorg.conf'))
-
+			
+		#self.videodrv(self.get_cmdline("vga"))
+		self.drvtype(self.get_cmdline("overlay"))
 		self.configureNetDrv()
 		self.configureVideoDrv()
 
@@ -87,8 +111,6 @@ class MhwdController:
 def run():
 	""" Configure the hardware """
 
-	rootMountPoint = libcalamares.globalstorage.value( "rootMountPoint" )
-
-	mhwd = MhwdController(rootMountPoint)
+	mhwd = MhwdController()
 
 	return mhwd.run()
