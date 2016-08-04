@@ -83,13 +83,9 @@ class MhwdController:
 			debug("Cannot configure drivers", "mhwd terminted with exit code {}.".format(e.returncode))
 
 	def run(self):
-		for b in self.bus:
-			if not self.local:
-				self.configure(self.buses[b], 0300)
-				self.configure(self.buses[b], 0200)
-			else:
-				self.configure(self.buses[b], 0300, self.repo)
-				self.configure(self.buses[b], 0200, self.repo)
+		for b in self.buses:
+			self.configure(self.buses[b], 0300)
+			self.configure(self.buses[b], 0200)
 
 def run():
 	""" Configure the hardware """
