@@ -21,15 +21,13 @@
 import os
 import shutil
 import libcalamares
-import libcalamares.job
-
 
 from subprocess import call, CalledProcessError
-from libcalamares.utils import target_env_call, check_target_env_output, debug
+from libcalamares.utils import target_env_call, debug
 
 class PacmanController:
 	def __init__(self):
-		self.__operations = globalstorage.value("packageOperations")
+		self.__operations = libcalamares.globalstorage.value("packageOperations")
 
 	@property
 	def operations(self):
@@ -67,11 +65,11 @@ class PacmanController:
 class ChrootController:
 	def __init__(self):
 		self.__root = globalstorage.value('rootMountPoint')
-		self.__directories = configuration.get('directories', [])
-		self.__requirements = configuration.get('requirements', [])
-		self.__keyrings = configuration.get('keyrings', [])
-		if "branch" in configuration:
-			self.__branch = configuration["branch"]
+		self.__directories = job.configuration.get('directories', [])
+		self.__requirements = job.configuration.get('requirements', [])
+		self.__keyrings = job.configuration.get('keyrings', [])
+		if "branch" in job.configuration:
+			self.__branch = job.configuration["branch"]
 		else:
 			self.__branch = ""
 
@@ -81,7 +79,7 @@ class ChrootController:
 	@property
 	def root(self):
 		return self.__root
-	
+
 	@property
 	def umask(self):
 		return self.__umask

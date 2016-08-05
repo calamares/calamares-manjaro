@@ -19,14 +19,13 @@
 #   along with Calamares. If not, see <http://www.gnu.org/licenses/>.
 
 import libcalamares
-import libcalamares.job
 
 from libcalamares.utils import target_env_call, debug
 from subprocess import CalledProcessError
 
 class ServicesController:
     def __init__(self):
-        self.__services = configuration.get('services', [])
+        self.__services = libcalamares.job.configuration.get('services', [])
 
     @property
     def services(self):
