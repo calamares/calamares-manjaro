@@ -64,12 +64,12 @@ class PacmanController:
 
 class ChrootController:
 	def __init__(self):
-		self.__root = globalstorage.value('rootMountPoint')
-		self.__directories = job.configuration.get('directories', [])
-		self.__requirements = job.configuration.get('requirements', [])
-		self.__keyrings = job.configuration.get('keyrings', [])
-		if "branch" in job.configuration:
-			self.__branch = job.configuration["branch"]
+		self.__root = libcalamares.globalstorage.value('rootMountPoint')
+		self.__directories = libcalamares.job.configuration.get('directories', [])
+		self.__requirements = libcalamares.job.configuration.get('requirements', [])
+		self.__keyrings = libcalamares.job.configuration.get('keyrings', [])
+		if "branch" in libcalamares.job.configuration:
+			self.__branch = libcalamares.job.configuration["branch"]
 		else:
 			self.__branch = ""
 
