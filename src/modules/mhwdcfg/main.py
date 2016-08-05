@@ -79,7 +79,7 @@ class MhwdController:
 
 	def run(self):
 		for b in self.buses:
-			for i in self.hwids.keys():
+			for i in self.hwids:
 				self.configure(b, self.hwids("net"[i]))
 				self.configure(b, self.hwids("vid"[i]))
 
