@@ -35,20 +35,17 @@ class ServicesController:
         for svc in self.services[status]:
             try:
                 target_env_call(["rc-update", action, svc["name"], svc["runlevel"]])
-                debug(status + "service {}".format(svc["name"]))
             except CalledProcessError as e:
                 debug("Cannot update service {}".format(e.returncode))
 
     def run(self):
-        for key in self.services.keys():
-            if key == "enabled":
-                self.update("add", "enabled")
-            elif key == "disabled":
-                self.update("del", "disabled")
+        svc = lambda x: self.services[x]
+        self.update("add", svc("enabled"))
+        self.update("del", svc("disabled"))
 
         return None
 
 def run():
     """ Setup openrc services """
-    svc = ServicesController()
-    return svc.run()
+    sc = ServicesController()
+    return sc.run()

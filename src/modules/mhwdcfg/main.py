@@ -16,35 +16,32 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Calamares. If not, see <http://www.gnu.org/licenses/>.
 
-import shlex
-
 import libcalamares
 
 from libcalamares.utils import target_env_call, debug
-from subprocess import call, CalledProcessError
+from subprocess import CalledProcessError
 
 class MhwdController:
 	def __init__(self):
 		self.__root = libcalamares.globalstorage.value( "rootMountPoint" )
-		self.__kernelline = call(["cat", "/proc/cmdline"])
-		self.__video = ""
 		self.__bus_types = libcalamares.job.configuration.get('bus_types', [])
 		self.__identifiers = libcalamares.job.configuration.get('identifiers', [])
 		self.__local_repo = libcalamares.job.configuration['local_repo']
 		self.__repo_conf = libcalamares.job.configuration['repo_conf']
-
-	@property
-	def kernelline(self):
-		return self.__kernelline
+		self.__video = None
 
 	@property
 	def video(self):
-		for opt in shlex.split(self.kernelline):
+		f = open("/proc/cmdline")
+		for opt in f.readline().strip().split():
 			if '=' not in opt:
 				continue
-			key, self.__video = opt.split('=', 1)
+			key, val = opt.split("=", 1)
 			if key == "overlay":
-				return str(self.__video)
+				self.__video = val
+				return self.__video
+				
+		f.close()
 
 	@property
 	def root(self):
@@ -64,10 +61,10 @@ class MhwdController:
 
 	@property
 	def bus_types(self):
-		return self.__bus_types
-
-	def configure(self, bn, val):
-		args = ["mhwd", "-a", bn, self.video, val]
+		return self.__bus_types		
+		
+	def configure(self, bus, val):
+		args = ["mhwd", "-a", bus, self.video, val]
 		if self.local_repo:
 			args += ["--pmconfig", self.repo_conf]
 
@@ -77,13 +74,12 @@ class MhwdController:
 			debug("Cannot configure drivers", "mhwd terminted with exit code {}.".format(e.returncode))
 
 	def run(self):
-		nids = lambda x: self.identifiers['net']
-		vids = lambda x: self.identifiers['vid']
+		debug("Video driver: {}".format(self.video))
 		for bus in self.bus_types:
-			for idx in nids:
-				self.configure(bus, idx)
-			for idx in vids:
-				self.configure(bus, idx)
+			for idx in self.identifiers['net']:
+				self.configure(bus, str(idx))
+			for idx in self.identifiers['vid']:
+				self.configure(bus, str(idx))
 
 def run():
 	""" Configure the hardware """
@@ -91,3 +87,4 @@ def run():
 	mhwd = MhwdController()
 
 	return mhwd.run()
+
