@@ -25,13 +25,14 @@ from subprocess import call, CalledProcessError
 
 class MhwdController:
 	def __init__(self):
-		self.__buses = libcalamares.job.configuration.get('buses', [])
-		self.__hwids = libcalamares.job.configuration.get('hwids', [])
-		self.__islocal = libcalamares.job.configuration['local']
-		self.__repo = libcalamares.job.configuration['repo']
+		self.__bus_types = libcalamares.job.configuration.get('bus_types', [])
+		self.__identifiers = libcalamares.job.configuration.get('identifiers', [])
+		self.__local_repo = libcalamares.job.configuration['local_repo']
+		self.__repo_conf = libcalamares.job.configuration['repo_conf']
+		
 		self.__root = libcalamares.globalstorage.value( "rootMountPoint" )
 		self.__kernelline = call(["cat", "/proc/cmdline"])
-		self.__video = shlex.split(self.kernelline)
+		self.__video = shlex.split(self.__kernelline)
 
 	@property
 	def kernelline(self):
@@ -42,7 +43,6 @@ class MhwdController:
 		for opt in self.__video:
 			if '=' not in opt:
 				continue
-
 			key, val = opt.split('=', 1)
 			if key == "overlay":
 				return str(val)
@@ -52,25 +52,25 @@ class MhwdController:
 		return self.__root
 
 	@property
-	def islocal(self):
-		return self.__islocal
+	def local_repo(self):
+		return self.__local_repo
 
 	@property
-	def repo(self):
-		return self.__repo
+	def repo_conf(self):
+		return self.__repo_conf
 
 	@property
-	def hwids(self):
-		return self.__hwids
+	def identifiers(self):
+		return self.__identifiers
 
 	@property
-	def buses(self):
-		return self.__buses
+	def bus_types(self):
+		return self.__bus_types
 
-	def configure(self, bus, idval):
-		args = ["mhwd", "-a", bus, self.video, idval]
-		if self.islocal:
-			args += ["--pmconfig", self.repo]
+	def configure(self, bn, val):
+		args = ["mhwd", "-a", bn, self.video, val]
+		if self.local_repo:
+			args += ["--pmconfig", self.repo_conf]
 
 		try:
 			target_env_call(args)
@@ -78,10 +78,13 @@ class MhwdController:
 			debug("Cannot configure drivers", "mhwd terminted with exit code {}.".format(e.returncode))
 
 	def run(self):
-		for b in self.buses:
-			for i in self.hwids:
-				self.configure(b, self.hwids("net"[i]))
-				self.configure(b, self.hwids("vid"[i]))
+		nids = lambda x: self.identifiers['net']
+		vids = lambda x: self.identifiers['vid']
+		for bus in self.bus_types:
+			for idx in nids:
+				self.configure(bus, idx)
+			for idx in vids:
+				self.configure(bus, idx)
 
 def run():
 	""" Configure the hardware """
