@@ -25,14 +25,13 @@ from subprocess import call, CalledProcessError
 
 class MhwdController:
 	def __init__(self):
+		self.__root = libcalamares.globalstorage.value( "rootMountPoint" )
+		self.__kernelline = call(["cat", "/proc/cmdline"])
+		self.__video = ""
 		self.__bus_types = libcalamares.job.configuration.get('bus_types', [])
 		self.__identifiers = libcalamares.job.configuration.get('identifiers', [])
 		self.__local_repo = libcalamares.job.configuration['local_repo']
 		self.__repo_conf = libcalamares.job.configuration['repo_conf']
-		
-		self.__root = libcalamares.globalstorage.value( "rootMountPoint" )
-		self.__kernelline = call(["cat", "/proc/cmdline"])
-		self.__video = shlex.split(self.__kernelline)
 
 	@property
 	def kernelline(self):
@@ -40,12 +39,12 @@ class MhwdController:
 
 	@property
 	def video(self):
-		for opt in self.__video:
+		for opt in shlex.split(self.kernelline):
 			if '=' not in opt:
 				continue
-			key, val = opt.split('=', 1)
+			key, self.__video = opt.split('=', 1)
 			if key == "overlay":
-				return str(val)
+				return str(self.__video)
 
 	@property
 	def root(self):
