@@ -18,7 +18,7 @@
 
 import libcalamares
 
-from libcalamares.utils import target_env_call, debug
+from libcalamares.utils import target_env_call, check_target_env_call, debug
 from subprocess import CalledProcessError
 
 class MhwdController:
@@ -28,7 +28,7 @@ class MhwdController:
 		self.__identifiers = libcalamares.job.configuration.get('identifiers', [])
 		self.__local_repo = libcalamares.job.configuration['local_repo']
 		self.__repo_conf = libcalamares.job.configuration['repo_conf']
-		self.__video = None
+		self.__video = "free"
 
 	@property
 	def video(self):
@@ -40,7 +40,7 @@ class MhwdController:
 			if key == "overlay":
 				self.__video = val
 				return self.__video
-				
+
 		f.close()
 
 	@property
@@ -61,25 +61,22 @@ class MhwdController:
 
 	@property
 	def bus_types(self):
-		return self.__bus_types		
-		
+		return self.__bus_types
+
 	def configure(self, bus, val):
 		args = ["mhwd", "-a", bus, self.video, val]
 		if self.local_repo:
 			args += ["--pmconfig", self.repo_conf]
 
-		try:
-			target_env_call(args)
-		except CalledProcessError as e:
-			debug("Cannot configure drivers", "mhwd terminted with exit code {}.".format(e.returncode))
+		check_target_env_call(args)
 
 	def run(self):
 		debug("Video driver: {}".format(self.video))
 		for bus in self.bus_types:
 			for idx in self.identifiers['net']:
-				self.configure(bus, str(idx))
+				self.configure(bus, idx)
 			for idx in self.identifiers['vid']:
-				self.configure(bus, str(idx))
+				self.configure(bus, idx)
 
 def run():
 	""" Configure the hardware """

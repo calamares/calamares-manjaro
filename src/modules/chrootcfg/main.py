@@ -23,7 +23,7 @@ import shutil
 import libcalamares
 
 from subprocess import call, CalledProcessError
-from libcalamares.utils import target_env_call, debug
+from libcalamares.utils import target_env_call, check_target_env_call, debug
 
 class PacmanController:
 	def __init__(self):
@@ -50,16 +50,10 @@ class PacmanController:
 		else:
 			flags = "-Sy"
 
-		try:
-			target_env_call(["pacman", flags, "--noconfirm"] + self.operations["install"])
-		except CalledProcessError as e:
-			debug("Cannot install selected packages.", "pacman terminated with exit code {}.".format(e.returncode))
+		check_target_env_call(["pacman", flags, "--noconfirm"] + self.operations["install"])
 
 	def remove(self):
-		try:
-			target_env_call(["pacman", "-Rs", "--noconfirm"] + self.operations["remove"])
-		except CalledProcessError as e:
-			debug("Cannot remove selected packages.", "pacman terminated with exit code {}.".format(e.returncode))
+		check_target_env_call(["pacman", "-Rs", "--noconfirm"] + self.operations["remove"])
 
 
 class ChrootController:
@@ -112,28 +106,19 @@ class ChrootController:
 
 	def copy_file(self, file):
 		if os.path.exists(os.path.join("/",file)):
-			try:
-				shutil.copy2(os.path.join("/",file), os.path.join(self.root, file))
-			except FileNotFoundError as e:
-				debug("Cannot copy {}".format(os.path.join("/",file)))
+			shutil.copy2(os.path.join("/",file), os.path.join(self.root, file))
+
 
 	def rank_mirrors(self):
-		try:
-			target_env_call(["pacman-mirrors", "-g", "-m", "rank", "-b", self.branch])
-		except CalledProcessError as e:
-			debug("Cannot rank mirrors", "pacman-mirrors terminated with exit code {}.".format(e.returncode))
+		check_target_env_call(["pacman-mirrors", "-g", "-m", "rank", "-b", self.branch])
+
 
 	def populate_keyring(self):
-		try:
-			target_env_call(["pacman-key", "--populate"] + self.keyrings)
-		except CalledProcessError as e:
-			debug("Cannot populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
+		check_target_env_call(["pacman-key", "--populate"] + self.keyrings)
+
 
 	def init_keyring(self):
-			try:
-				target_env_call(["pacman-key", "--init"])
-			except CalledProcessError as e:
-				debug("Cannot init keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
+		check_target_env_call(["pacman-key", "--init"])
 
 	def make_dirs(self):
 		for target in self.directories:
