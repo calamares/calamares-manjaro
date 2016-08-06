@@ -16,43 +16,75 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Calamares. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import subprocess
-
 import libcalamares
 
-import shutil
+from libcalamares.utils import target_env_call, debug
+from subprocess import CalledProcessError
 
-from libcalamares.utils import target_env_call
-from subprocess.call import check_call
+class MhwdController:
+	def __init__(self):
+		self.__root = libcalamares.globalstorage.value( "rootMountPoint" )
+		self.__bus_types = libcalamares.job.configuration.get('bus_types', [])
+		self.__identifiers = libcalamares.job.configuration.get('identifiers', [])
+		self.__local_repo = libcalamares.job.configuration['local_repo']
+		self.__repo_conf = libcalamares.job.configuration['repo_conf']
+		self.__video = None
+
+	@property
+	def video(self):
+		f = open("/proc/cmdline")
+		for opt in f.readline().strip().split():
+			if '=' not in opt:
+				continue
+			key, val = opt.split("=", 1)
+			if key == "overlay":
+				self.__video = val
+				return self.__video
+				
+		f.close()
+
+	@property
+	def root(self):
+		return self.__root
+
+	@property
+	def local_repo(self):
+		return self.__local_repo
+
+	@property
+	def repo_conf(self):
+		return self.__repo_conf
+
+	@property
+	def identifiers(self):
+		return self.__identifiers
+
+	@property
+	def bus_types(self):
+		return self.__bus_types		
+		
+	def configure(self, bus, val):
+		args = ["mhwd", "-a", bus, self.video, val]
+		if self.local_repo:
+			args += ["--pmconfig", self.repo_conf]
+
+		try:
+			target_env_call(args)
+		except CalledProcessError as e:
+			debug("Cannot configure drivers", "mhwd terminted with exit code {}.".format(e.returncode))
+
+	def run(self):
+		debug("Video driver: {}".format(self.video))
+		for bus in self.bus_types:
+			for idx in self.identifiers['net']:
+				self.configure(bus, str(idx))
+			for idx in self.identifiers['vid']:
+				self.configure(bus, str(idx))
 
 def run():
 	""" Configure the hardware """
 
-	install_path = libcalamares.globalstorage.value( "rootMountPoint" )
+	mhwd = MhwdController()
 
-	# Copy generated xorg.xonf to target
-	if os.path.exists("/etc/X11/xorg.conf"):
-		shutil.copy2('/etc/X11/xorg.conf',
-		os.path.join(install_path, 'etc/X11/xorg.conf'))
+	return mhwd.run()
 
-	# TODO: Maybe we can drop this
-	# Configure ALSA
-	# configure_alsa
-
-	# Set pulse
-	if os.path.exists("/usr/bin/pulseaudio-ctl"):
-		target_env_call(['pulseaudio-ctl', 'normal'])
-
-	# Save settings
-	target_env_call(['alsactl', '-f', '/etc/asound.state', 'store'])
-
-        # TODO: port mhwd script to python
-        path = '/usr/lib/calamares/modules/drivercfg/'
-
-
-	mhwd_script = path + "mhwd.sh"
-        #try:
-        check_call(["/usr/bin/bash", mhwd_script, install_path])
-
-	return None
