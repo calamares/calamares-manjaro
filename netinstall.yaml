@@ -3,8 +3,6 @@
   #hidden: true
   #selected: true
   packages:
-        - bzip2
-        - coreutils
         - cryptsetup
         - device-mapper
         - dhcpcd
@@ -14,13 +12,10 @@
         - gcc-libs
         - gettext
         - glibc
-        - grep
-        - gzip
         - inetutils
         - iproute2
         - iputils
         - jfsutils
-        - less
         - licenses
         - logrotate
         - lvm2
@@ -35,17 +30,14 @@
         - pciutils
         - pcmciautils
         - procps-ng
-        - psmisc
         - reiserfsprogs
         - s-nail
         - sed
-        - shadow
         - sysfsutils
         - systemd-sysvcompat
         - tar
         - texinfo
         - usbutils
-        - util-linux
         - vi
         - which
         - xfsprogs

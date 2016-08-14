@@ -1,8 +1,6 @@
 - name: "base"
   description: "Command line interface (net)"
   packages:
-        - bzip2
-        - coreutils
         - cryptsetup-openrc
         - device-mapper-openrc
         - dbus-openrc
@@ -13,13 +11,10 @@
         - gcc-libs
         - gettext
         - glibc
-        - grep
-        - gzip
         - inetutils-openrc
         - iproute2
         - iputils
         - jfsutils
-        - less
         - licenses
         - logrotate
         - lvm2-openrc
@@ -33,16 +28,13 @@
         - pciutils
         - pcmciautils
         - procps-ng
-        - psmisc
         - reiserfsprogs
         - s-nail
         - sed
-        - shadow
         - sysfsutils
         - tar
         - texinfo
         - usbutils
-        - util-linux
         - vi
         - which
         - xfsprogs
