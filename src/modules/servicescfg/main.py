@@ -19,38 +19,43 @@
 #   along with Calamares. If not, see <http://www.gnu.org/licenses/>.
 
 import libcalamares
+import os
 
-from libcalamares.utils import target_env_call, check_target_env_call, debug
-from subprocess import CalledProcessError
+from libcalamares.utils import check_target_env_call, debug
 
 class ServicesController:
     def __init__(self):
+        self.__root = libcalamares.globalstorage.value('rootMountPoint')
         self.__services = libcalamares.job.configuration.get('services', [])
 
+    @property
+    def root(self):
+        return self.__root
+    
     @property
     def services(self):
         return self.__services
 
     def update(self, action, status):
         for svc in self.services[status]:
+            if os.path.exists(self.root + "/etc/init.d/" + svc["name"]):
                 check_target_env_call(["rc-update", action, svc["name"], svc["runlevel"]])
 
     def run(self):
-        svc = lambda x: self.services[x]
-        self.update("add", svc["enabled"])
-        if svc["disabled"] is not None:
-            self.update("del", svc["disabled"])
-        #=======================================================================
-        # for key in self.services.keys():
-        #     if key == "enabled":
-        #         self.update("add", "enabled")
-        #     elif key == "disabled":
-        #         self.update("del", "disabled")
-        #=======================================================================
+#         svc = lambda x: self.services[x]
+#         self.update("add", svc["enabled"])
+#         if svc["disabled"] is not None:
+#             self.update("del", svc["disabled"])
+        for key in self.services.keys():
+            if key == "enabled":
+                self.update("add", key)
+            elif key == "disabled":
+                self.update("del", key)
 
         return None
 
 def run():
     """ Setup openrc services """
     sc = ServicesController()
-    return sc.run()
+    sc.run()
+    return None
