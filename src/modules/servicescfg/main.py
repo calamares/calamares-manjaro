@@ -36,17 +36,18 @@ class ServicesController:
     def services(self):
         return self.__services
 
-    def update(self, action, status):
-        for svc in self.services[status]:
+    def update(self, action, state):
+        for svc in self.services[state]:
             if os.path.exists(self.root + "/etc/init.d/" + svc["name"]):
                 check_target_env_call(["rc-update", action, svc["name"], svc["runlevel"]])
 
     def run(self):
-        for key in self.services.keys():
-            if key == "enabled":
-                self.update("add", key)
-            elif key == "disabled":
-                self.update("del", key)
+        debug("Services: {}".format(self.services))
+        for state in self.services.keys():
+            if state == "enabled":
+                self.update("add", "enabled")
+            elif state == "disabled":
+                self.update("del", "disabled")
 
         return None
 
