@@ -42,10 +42,6 @@ class ServicesController:
                 check_target_env_call(["rc-update", action, svc["name"], svc["runlevel"]])
 
     def run(self):
-#         svc = lambda x: self.services[x]
-#         self.update("add", svc["enabled"])
-#         if svc["disabled"] is not None:
-#             self.update("del", svc["disabled"])
         for key in self.services.keys():
             if key == "enabled":
                 self.update("add", key)
@@ -57,5 +53,4 @@ class ServicesController:
 def run():
     """ Setup openrc services """
     sc = ServicesController()
-    sc.run()
-    return None
+    return sc.run()

@@ -88,14 +88,14 @@ class PacmanController:
 	def progress(self, value):
 		self._progress = value
 
-	def populate_keyring(self):
-		check_target_env_call(["pacman-key", "--populate"] + self.keyrings)
-
 	def init_keyring(self):
 		check_target_env_call(["pacman-key", "--init"])
 
+	def populate_keyring(self):
+		check_target_env_call(["pacman-key", "--populate"] + self.keyrings)
+
 	def send_pg(self, counter):
-		if self.tracker.total > 0:
+		if self.tracker.total != 0:
 			step = 0.05
 			step += 0.95 * (counter / float(self.tracker.total))
 			self.progress += step / float(self.tracker.total)
@@ -140,8 +140,6 @@ class PacmanController:
 
 		return None
 
-
-
 	def install(self, local=False):
 		cachedir = os.path.join(self.root, "var/cache/pacman/pkg")
 		dbdir = os.path.join(self.root, "var/lib/pacman")
@@ -155,25 +153,26 @@ class PacmanController:
 		cmd =  args + self.operations["install"]
 		self.parse_output(cmd)
 
-# 	def remove(self):
-# 		args = ["chroot", self.root, "pacman", "-Rs", "--noconfirm"]
-# 		cmd = args + self.operations["remove"]
-# 		self.parse_output(cmd)
+	def remove(self):
+		args = ["chroot", self.root, "pacman", "-Rs", "--noconfirm"]
+		cmd = args + self.operations["remove"]
+		check_target_env_call(cmd)
 
-	def run(self):
+	def run(self, initkeys=False):
 		for op in self.operations.keys():
 			if op == "install":
 				self.install()
 			elif op == "localInstall":
 				self.install(local=True)
-# 			elif op == "remove":
-# 				self.tracker.total(len(self.operations["remove"]))
-# 				self.remove()
-		#self.init_keyring()
-		#self.populate_keyring()
+			elif op == "remove":
+				self.tracker.total(len(self.operations["remove"]))
+				self.remove()
+		
+		if initkeys:		
+			self.init_keyring()
+			self.populate_keyring()
 
 		return None
-
 
 class ChrootController:
 	def __init__(self):
@@ -209,7 +208,7 @@ class ChrootController:
 		self.prepare()
 		pacman = PacmanController(self.root)
 
-		return pacman.run()
+		return pacman.run(initkeys=False)
 
 def run():
 	""" Create chroot dirs and install pacman, kernel and netinstall selection """
