@@ -16,18 +16,16 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Calamares. If not, see <http://www.gnu.org/licenses/>.
 
-import libcalamares
+import libcalamares, glob, os, shutil
 
-from libcalamares.utils import check_target_env_call, debug, check_target_env_output
-from subprocess import check_call
+from libcalamares.utils import check_target_env_call, debug
 
 class MhwdController:
 	def __init__(self):
 		self.__root = libcalamares.globalstorage.value( "rootMountPoint" )
 		self.__bus = libcalamares.job.configuration.get('bus', [])
 		self.__identifier = libcalamares.job.configuration.get('identifier', [])
-		self.__local_repo = libcalamares.job.configuration['local_repo']
-		self.__repo_conf = libcalamares.job.configuration['repo_conf']
+		self.__local = libcalamares.job.configuration['local']
 		self._driver = libcalamares.job.configuration['driver']
 
 	@property
@@ -43,29 +41,29 @@ class MhwdController:
 		return self.__root
 
 	@property
-	def local_repo(self):
-		return self.__local_repo
-
-	@property
-	def repo_conf(self):
-		return self.__repo_conf
+	def local(self):
+		return self.__local
 
 	@property
 	def identifier(self):
 		return self.__identifier
-
+	
 	@property
 	def bus(self):
 		return self.__bus
-
+	
+	def copy_packages(self):
+		dest = os.path.join(self.root, "var/cache/pacman/pkg/")
+		for file in glob.glob("/opt/live/pkgs/*.pkg.tar.xz"):
+				shutil.copy(file, dest)
+		
 	def configure(self, bus, id):
 		cmd = ["mhwd", "-a", bus, str(self.driver), str(id).zfill(4)]
-		if self.local_repo:
-			cmd.extend(["--pmconfig", self.repo_conf])
-			
-		output = check_target_env_output(cmd)
-		debug("output: {}".format(output))
-		
+		if self.local:
+			self.copy_packages()
+
+		check_target_env_call(cmd)
+				
 	def run(self):
 		debug("Driver: {}".format(self.driver))
 		for b in self.bus:
