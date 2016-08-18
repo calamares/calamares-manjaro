@@ -42,7 +42,6 @@ class ServicesController:
                 check_target_env_call(["rc-update", action, svc["name"], svc["runlevel"]])
 
     def run(self):
-        debug("Services: {}".format(self.services))
         for state in self.services.keys():
             if state == "enabled":
                 self.update("add", "enabled")
