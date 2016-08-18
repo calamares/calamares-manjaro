@@ -18,7 +18,8 @@
 
 import libcalamares
 
-from libcalamares.utils import check_target_env_call, debug
+from libcalamares.utils import check_target_env_call, debug, check_target_env_output
+from subprocess import check_call
 
 class MhwdController:
 	def __init__(self):
@@ -32,16 +33,6 @@ class MhwdController:
 	@property
 	def driver(self):
 		return self._driver
-# 		with open("/proc/cmdline") as f:
-# 			for opt in f.readline().strip().split():
-# 				if '=' not in opt:
-# 					continue
-# 				key, val = opt.split("=", 1)
-# 				if key == "overlay":
-# 					self._video = val
-# 					return self._video
-# 
-# 		f.close()
 
 	@driver.setter
 	def driver(self, value):
@@ -67,21 +58,21 @@ class MhwdController:
 	def bus(self):
 		return self.__bus
 
-	def configure(self, bt, val):
-		cmd = ["mhwd"]
+	def configure(self, bus, id):
+		cmd = ["mhwd", "-a", bus, str(self.driver), str(id).zfill(4)]
 		if self.local_repo:
 			cmd.extend(["--pmconfig", self.repo_conf])
 			
-		cmd.extend(["-a", bt, str(self.driver), str(val).zfill(4)])
-		check_target_env_call(cmd)
-
+		output = check_target_env_output(cmd)
+		debug("output: {}".format(output))
+		
 	def run(self):
 		debug("Driver: {}".format(self.driver))
 		for b in self.bus:
 			for id in self.identifier['net']:
 				debug("Device ID: {}".format(str(id).zfill(4)))
 				self.configure(b, id)
-			for id in self.identifier['vid']:
+			for id in self.identifier['video']:
 				debug("Device ID: {}".format(str(id).zfill(4)))
 				self.configure(b, id)
 				
@@ -93,4 +84,3 @@ def run():
 	mhwd = MhwdController()
 	
 	return mhwd.run()
-
