@@ -1,15 +1,19 @@
 - name: "base"
-  description: "Command line interface (net)"
+  description: "Command line interface"
   #hidden: true
-  #selected: true
+  selected: true
   packages:
+        - bash
         - bzip2
         - coreutils
         - cryptsetup
         - device-mapper
         - dhcpcd
         - diffutils
+        - e2fsprogs
         - file
+        - filesystem
+        - findutils
         - gawk
         - gcc-libs
         - gettext
@@ -32,8 +36,10 @@
         - mhwd-db
         - nano
         - netctl
+        - pacman
         - pciutils
         - pcmciautils
+        - perl
         - procps-ng
         - psmisc
         - reiserfsprogs

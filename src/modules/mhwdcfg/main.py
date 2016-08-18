@@ -18,31 +18,26 @@
 
 import libcalamares
 
-from libcalamares.utils import target_env_call, debug
-from subprocess import CalledProcessError
+from libcalamares.utils import check_target_env_call, debug, check_target_env_output
+from subprocess import check_call
 
 class MhwdController:
 	def __init__(self):
 		self.__root = libcalamares.globalstorage.value( "rootMountPoint" )
-		self.__bus_types = libcalamares.job.configuration.get('bus_types', [])
-		self.__identifiers = libcalamares.job.configuration.get('identifiers', [])
+		self.__bus = libcalamares.job.configuration.get('bus', [])
+		self.__identifier = libcalamares.job.configuration.get('identifier', [])
 		self.__local_repo = libcalamares.job.configuration['local_repo']
 		self.__repo_conf = libcalamares.job.configuration['repo_conf']
-		self.__video = None
+		self._driver = libcalamares.job.configuration['driver']
 
 	@property
-	def video(self):
-		f = open("/proc/cmdline")
-		for opt in f.readline().strip().split():
-			if '=' not in opt:
-				continue
-			key, val = opt.split("=", 1)
-			if key == "overlay":
-				self.__video = val
-				return self.__video
-				
-		f.close()
+	def driver(self):
+		return self._driver
 
+	@driver.setter
+	def driver(self, value):
+		self._driver = value
+		
 	@property
 	def root(self):
 		return self.__root
@@ -56,35 +51,36 @@ class MhwdController:
 		return self.__repo_conf
 
 	@property
-	def identifiers(self):
-		return self.__identifiers
+	def identifier(self):
+		return self.__identifier
 
 	@property
-	def bus_types(self):
-		return self.__bus_types		
-		
-	def configure(self, bus, val):
-		args = ["mhwd", "-a", bus, self.video, val]
+	def bus(self):
+		return self.__bus
+
+	def configure(self, bus, id):
+		cmd = ["mhwd", "-a", bus, str(self.driver), str(id).zfill(4)]
 		if self.local_repo:
-			args += ["--pmconfig", self.repo_conf]
-
-		try:
-			target_env_call(args)
-		except CalledProcessError as e:
-			debug("Cannot configure drivers", "mhwd terminted with exit code {}.".format(e.returncode))
-
+			cmd.extend(["--pmconfig", self.repo_conf])
+			
+		output = check_target_env_output(cmd)
+		debug("output: {}".format(output))
+		
 	def run(self):
-		debug("Video driver: {}".format(self.video))
-		for bus in self.bus_types:
-			for idx in self.identifiers['net']:
-				self.configure(bus, str(idx))
-			for idx in self.identifiers['vid']:
-				self.configure(bus, str(idx))
+		debug("Driver: {}".format(self.driver))
+		for b in self.bus:
+			for id in self.identifier['net']:
+				debug("Device ID: {}".format(str(id).zfill(4)))
+				self.configure(b, id)
+			for id in self.identifier['video']:
+				debug("Device ID: {}".format(str(id).zfill(4)))
+				self.configure(b, id)
+				
+		return None
 
 def run():
 	""" Configure the hardware """
 
 	mhwd = MhwdController()
-
+	
 	return mhwd.run()
-

@@ -1,18 +1,23 @@
 - name: "base"
-  description: "Command line interface (net)"
+  description: "Command line interface"
+  #hidden: true
+  selected: true
   packages:
+        - bash
         - bzip2
         - coreutils
         - cryptsetup-openrc
         - device-mapper-openrc
-        - dbus-openrc
         - dhcpcd-openrc
         - diffutils
+        - e2fsprogs
         - file
+        - filesystem
+        - findutils
         - gawk
         - gcc-libs
         - gettext
-        - glibc
+        - glibc-openrc
         - grep
         - gzip
         - inetutils-openrc
@@ -30,8 +35,11 @@
         - mhwd
         - mhwd-db
         - nano
+        - netifrc
+        - pacman
         - pciutils
         - pcmciautils
+        - perl
         - procps-ng
         - psmisc
         - reiserfsprogs
@@ -39,8 +47,10 @@
         - sed
         - shadow
         - sysfsutils
+        - eudev-systemdcompat
         - tar
         - texinfo
+        - udev-openrc
         - usbutils
         - util-linux
         - vi

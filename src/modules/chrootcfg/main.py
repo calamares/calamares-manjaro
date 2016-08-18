@@ -18,157 +18,201 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Calamares. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import shutil
+import os, shutil, subprocess, sys, re
+
 import libcalamares
 
-from subprocess import call, CalledProcessError
-from libcalamares.utils import target_env_call, debug
+from libcalamares.utils import check_target_env_call, debug
 
-class PacmanController:
+class OperationTracker:
 	def __init__(self):
-		self.__operations = libcalamares.globalstorage.value("packageOperations")
+		self._downloaded = 0
+		self._installed = 0
+		self._total = 0
 
 	@property
-	def operations(self):
-		return self.__operations
+	def downloaded(self):
+		return self._downloaded
 
-	def run(self):
-		for op in self.operations.keys():
-			if op == "install":
-				self.install()
-			elif op == "remove":
-				self.remove()
-			elif op == "localInstall":
-				self.install(local=True)
+	@downloaded.setter
+	def downloaded(self, value):
+		self._downloaded = value
 
-		return None
+	@property
+	def installed(self):
+		return self._installed
 
-	def install(self, local=False):
-		if local:
-			flags = "-U"
-		else:
-			flags = "-Sy"
+	@installed.setter
+	def installed(self, value):
+		self._installed = value
 
-		try:
-			target_env_call(["pacman", flags, "--noconfirm"] + self.operations["install"])
-		except CalledProcessError as e:
-			debug("Cannot install selected packages.", "pacman terminated with exit code {}.".format(e.returncode))
+	@property
+	def total(self):
+		return self._total
 
-	def remove(self):
-		try:
-			target_env_call(["pacman", "-Rs", "--noconfirm"] + self.operations["remove"])
-		except CalledProcessError as e:
-			debug("Cannot remove selected packages.", "pacman terminated with exit code {}.".format(e.returncode))
+	@total.setter
+	def total(self, value):
+		self._total = value
 
+ON_POSIX = 'posix' in sys.builtin_module_names
 
-class ChrootController:
-	def __init__(self):
-		self.__root = libcalamares.globalstorage.value('rootMountPoint')
-		self.__directories = libcalamares.job.configuration.get('directories', [])
-		self.__requirements = libcalamares.job.configuration.get('requirements', [])
+class PacmanController:
+	def __init__(self, root):
+		self.__root = root
+		self.__operations = libcalamares.globalstorage.value("packageOperations")
 		self.__keyrings = libcalamares.job.configuration.get('keyrings', [])
-		if "branch" in libcalamares.job.configuration:
-			self.__branch = libcalamares.job.configuration["branch"]
-		else:
-			self.__branch = ""
+		self.__tracker = OperationTracker()
+		self._progress = float(0)
 
-		self.__pacman = PacmanController()
-		self.__umask = os.umask(0)
+	@property
+	def tracker(self):
+		return self.__tracker
 
 	@property
 	def root(self):
 		return self.__root
 
 	@property
-	def umask(self):
-		return self.__umask
-
-	@property
-	def pacman(self):
-		return self.__pacman
-
-	@property
-	def branch(self):
-		return self.__branch
+	def operations(self):
+		return self.__operations
 
 	@property
 	def keyrings(self):
 		return self.__keyrings
 
 	@property
+	def progress(self):
+		return self._progress
+
+	@progress.setter
+	def progress(self, value):
+		self._progress = value
+
+	def init_keyring(self):
+		check_target_env_call(["pacman-key", "--init"])
+
+	def populate_keyring(self):
+		check_target_env_call(["pacman-key", "--populate"] + self.keyrings)
+
+	def send_pg(self, counter):
+		if self.tracker.total != 0:
+			step = 0.05
+			step += 0.95 * (counter / float(self.tracker.total))
+			self.progress += step / float(self.tracker.total)
+			debug("Progress: {}".format(self.progress))
+
+		libcalamares.job.setprogress(self.progress)
+
+	def parse_output(self, cmd):
+		cal_env = os.environ
+		cal_env["LC_ALL"] = "C"
+		last = []
+
+		process = subprocess.Popen(cmd, env=cal_env, bufsize=1, stdout=subprocess.PIPE, close_fds=ON_POSIX)
+
+		for line in iter(process.stdout.readline, b''):
+			pkgs = re.findall(r'\((\d+)\)', line.decode())
+			dl = re.findall(r'downloading\s+(.*).pkg.tar.xz', line.decode())
+			inst = re.findall(r'installing(.*)\.\.\.', line.decode())
+
+			if pkgs:
+				self.tracker.total = (int(pkgs[0]))
+				debug("Number of packages: {}".format(self.tracker.total))
+
+			if dl:
+				if dl != last:
+					self.tracker.downloaded += 1
+					debug("Downloading: {}".format(dl[0]))
+					debug("Downloaded packages: {}".format(self.tracker.downloaded))
+					self.send_pg(self.tracker.downloaded)
+
+				last = dl
+			elif inst:
+				self.tracker.installed += 1
+				debug("Installing: {}".format(inst[0]))
+				debug("Installed packages: {}".format(self.tracker.installed))
+				self.send_pg(self.tracker.installed)
+
+
+		if process.returncode != 0:
+			process.terminate()
+			return "pacman failed with error code {}.".format(process.returncode)
+
+		return None
+
+	def install(self, local=False):
+		cachedir = os.path.join(self.root, "var/cache/pacman/pkg")
+		dbdir = os.path.join(self.root, "var/lib/pacman")
+		args = ["pacman", "--noconfirm"]
+		if local:
+			args.extend(["-U"])
+		else:
+			args.extend(["-Sy"])
+
+		args.extend(["--cachedir", cachedir, "--root", self.root, "--dbpath", dbdir])
+		cmd =  args + self.operations["install"]
+		self.parse_output(cmd)
+
+	def remove(self):
+		args = ["chroot", self.root, "pacman", "-Rs", "--noconfirm"]
+		cmd = args + self.operations["remove"]
+		check_target_env_call(cmd)
+
+	def run(self, initkeys=False):
+		for op in self.operations.keys():
+			if op == "install":
+				self.install()
+			elif op == "localInstall":
+				self.install(local=True)
+			elif op == "remove":
+				self.tracker.total(len(self.operations["remove"]))
+				self.remove()
+		
+		if initkeys:		
+			self.init_keyring()
+			self.populate_keyring()
+
+		return None
+
+class ChrootController:
+	def __init__(self):
+		self.__root = libcalamares.globalstorage.value('rootMountPoint')
+		self.__requirements = libcalamares.job.configuration.get('requirements', [])
+
+	@property
+	def root(self):
+		return self.__root
+
+	@property
 	def requirements(self):
 		return self.__requirements
 
-	@property
-	def directories(self):
-		return self.__directories
-
-	def initilize(self):
-		try:
-			call(["pacman", "-Sy", "--noconfirm", "--cachedir", os.path.join(self.root, "var/cache/pacman/pkg"), "--root", self.root] + self.requirements)
-		except CalledProcessError as e:
-			debug("Cannot install pacman.", "pacman terminated with exit code {}.".format(e.returncode))
-
-	def copy_file(self, file):
-		if os.path.exists(os.path.join("/",file)):
-			try:
-				shutil.copy2(os.path.join("/",file), os.path.join(self.root, file))
-			except FileNotFoundError as e:
-				debug("Cannot copy {}".format(os.path.join("/",file)))
-
-	def rank_mirrors(self):
-		try:
-			target_env_call(["pacman-mirrors", "-g", "-m", "rank", "-b", self.branch])
-		except CalledProcessError as e:
-			debug("Cannot rank mirrors", "pacman-mirrors terminated with exit code {}.".format(e.returncode))
-
-	def populate_keyring(self):
-		try:
-			target_env_call(["pacman-key", "--populate"] + self.keyrings)
-		except CalledProcessError as e:
-			debug("Cannot populate keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
-
-	def init_keyring(self):
-			try:
-				target_env_call(["pacman-key", "--init"])
-			except CalledProcessError as e:
-				debug("Cannot init keyring", "pacman-key terminated with exit code {}.".format(e.returncode))
-
 	def make_dirs(self):
-		for target in self.directories:
-			dir = self.root + target["name"]
-			if not os.path.exists(dir):
-				debug("Create: {}".format(dir))
+		for target in self.requirements:
+			dest = self.root + target["name"]
+			if not os.path.exists(dest):
+				debug("Create: {}".format(dest))
 				mod = int(target["mode"],8)
 				debug("Mode: {}".format(oct(mod)))
-				os.makedirs(dir, mode=mod)
+				os.makedirs(dest, mode=mod)
 
 	def prepare(self):
+		cal_umask = os.umask(0)
 		self.make_dirs()
 		path = os.path.join(self.root, "run")
 		debug("Fix permissions: {}".format(path))
 		os.chmod(path, 0o755)
-		os.umask(self.umask)
-		if self.branch:
-			self.copy_file('etc/pacman-mirrors.conf')
+		os.umask(cal_umask)
 
-		self.copy_file('etc/resolv.conf')
-
-	def run(self, rank=False):
+	def run(self):
 		self.prepare()
-		self.initilize()
-		self.init_keyring()
-		self.populate_keyring()
-		self.copy_file('etc/pacman.d/mirrorlist')
-		if rank is True:
-			self.rank_mirrors()
+		pacman = PacmanController(self.root)
 
-		return self.pacman.run()
+		return pacman.run(initkeys=False)
 
 def run():
 	""" Create chroot dirs and install pacman, kernel and netinstall selection """
 
 	targetRoot = ChrootController()
 
-	return targetRoot.run(rank=True)
+	return targetRoot.run()
