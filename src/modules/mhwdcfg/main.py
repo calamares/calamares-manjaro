@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 #
-#   Copyright 2014, Artoo <artoo@manjaro.org>
+# === This file is part of Calamares - <http://github.com/calamares> ===
+#
+#   Copyright 2016, Artoo <artoo@manjaro.org>
 #
 #   Calamares is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -19,6 +21,7 @@
 import libcalamares, glob, os, shutil
 
 from libcalamares.utils import check_target_env_call, debug
+from os.path import join
 
 class MhwdController:
 	def __init__(self):
@@ -53,7 +56,7 @@ class MhwdController:
 		return self.__bus
 	
 	def copy_packages(self):
-		dest = os.path.join(self.root, "var/cache/pacman/pkg/")
+		dest = join(self.root, "var/cache/pacman/pkg/")
 		for file in glob.glob("/opt/live/pkgs/*.pkg.tar.xz"):
 				shutil.copy(file, dest)
 		

@@ -23,6 +23,7 @@ import os, shutil, subprocess, sys, re
 import libcalamares
 
 from libcalamares.utils import check_target_env_call, debug
+from os.path import join
 
 class OperationTracker:
 	def __init__(self):
@@ -141,8 +142,8 @@ class PacmanController:
 		return None
 
 	def install(self, local=False):
-		cachedir = os.path.join(self.root, "var/cache/pacman/pkg")
-		dbdir = os.path.join(self.root, "var/lib/pacman")
+		cachedir = join(self.root, "var/cache/pacman/pkg")
+		dbdir = join(self.root, "var/lib/pacman")
 		args = ["pacman", "--noconfirm"]
 		if local:
 			args.extend(["-U"])
@@ -199,7 +200,7 @@ class ChrootController:
 	def prepare(self):
 		cal_umask = os.umask(0)
 		self.make_dirs()
-		path = os.path.join(self.root, "run")
+		path = join(self.root, "run")
 		debug("Fix permissions: {}".format(path))
 		os.chmod(path, 0o755)
 		os.umask(cal_umask)
