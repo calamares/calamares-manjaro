@@ -18,10 +18,11 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Calamares. If not, see <http://www.gnu.org/licenses/>.
 
-import libcalamares, glob, os, shutil
+import libcalamares
 
-from libcalamares.utils import check_target_env_call, debug
+from libcalamares.utils import check_target_env_call, target_env_call, debug
 from os.path import join
+from subprocess import check_call, call
 
 class MhwdController:
 	def __init__(self):
@@ -29,6 +30,7 @@ class MhwdController:
 		self.__bus = libcalamares.job.configuration.get('bus', [])
 		self.__identifier = libcalamares.job.configuration.get('identifier', [])
 		self.__local = libcalamares.job.configuration['local']
+		self.__repo = libcalamares.job.configuration['repo']
 		self._driver = libcalamares.job.configuration['driver']
 
 	@property
@@ -46,7 +48,11 @@ class MhwdController:
 	@property
 	def local(self):
 		return self.__local
-
+	
+	@property
+	def repo(self):
+		return self.__repo
+	
 	@property
 	def identifier(self):
 		return self.__identifier
@@ -54,27 +60,29 @@ class MhwdController:
 	@property
 	def bus(self):
 		return self.__bus
-	
-	def copy_packages(self):
-		dest = join(self.root, "var/cache/pacman/pkg/")
-		for file in glob.glob("/opt/live/pkgs/*.pkg.tar.xz"):
-				shutil.copy(file, dest)
 		
-	def configure(self, bus, id):
-		cmd = ["mhwd", "-a", bus, str(self.driver), str(id).zfill(4)]
+	def mount_repo(self):
+		call(["mount", "-Br", "/opt", join(self.root, "opt")])
+	
+	def umount_repo(self):
+		call(["umount", "-lv", join(self.root, "opt")])
+	
+	def configure(self, name, id):
+		cmd = ["mhwd", "-a", str(name), str(self.driver), str(id).zfill(4)]
 		if self.local:
-			self.copy_packages()
+			self.mount_repo()
+			cmd.extend(["--pmconfig", self.repo])
 
 		check_target_env_call(cmd)
-				
+		if self.local:
+			self.umount_repo()
+		
 	def run(self):
-		debug("Driver: {}".format(self.driver))
-		for b in self.bus:
-			for id in self.identifier['net']:
-				debug("Device ID: {}".format(str(id).zfill(4)))
+		for id in self.identifier['net']:
+			for b in self.bus:
 				self.configure(b, id)
-			for id in self.identifier['video']:
-				debug("Device ID: {}".format(str(id).zfill(4)))
+		for id in self.identifier['video']:
+			for b in self.bus:
 				self.configure(b, id)
 				
 		return None

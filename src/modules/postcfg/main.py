@@ -31,7 +31,7 @@ class ConfigController:
     def __init__(self):
         self.__root = libcalamares.globalstorage.value( "rootMountPoint" )
         self.__keyrings = libcalamares.job.configuration.get('keyrings', [])
-
+        
     @property
     def root(self):
         return self.__root
@@ -75,7 +75,7 @@ class ConfigController:
         # Update grub.cfg
         if exists(join(self.root, "usr/bin/update-grub")) and libcalamares.globalstorage.value("bootLoader") is not None:
             target_env_call(["update-grub"])
-            
+        
         return None
     
 def run():
