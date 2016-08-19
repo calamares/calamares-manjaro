@@ -1,0 +1,6 @@
+---
+type:       "job"
+name:       "openrccfg"
+interface:  "python"
+requires:   []
+script:     "main.py"
