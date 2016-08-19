@@ -22,6 +22,7 @@ import libcalamares
 import os
 
 from libcalamares.utils import check_target_env_call, debug
+from os.path import exists
 
 class ServicesController:
     def __init__(self):
@@ -38,7 +39,7 @@ class ServicesController:
 
     def update(self, action, state):
         for svc in self.services[state]:
-            if os.path.exists(self.root + "/etc/init.d/" + svc["name"]):
+            if exists(self.root + "/etc/init.d/" + svc["name"]):
                 check_target_env_call(["rc-update", action, svc["name"], svc["runlevel"]])
 
     def run(self):
