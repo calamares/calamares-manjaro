@@ -40,10 +40,6 @@ class ConfigController:
     def populate_keyring(self):
         check_target_env_call(["pacman-key", "--populate"] + self.keyrings)
         
-    def run(self):
-        self.init_keyring()
-        self.populate_keyring()
-        
     def setExpression(self, pattern, file):
         check_call(["sed", "-e", pattern, "-i", join(self.root, file)])
         
