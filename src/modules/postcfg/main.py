@@ -35,6 +35,10 @@ class ConfigController:
     @property
     def root(self):
         return self.__root
+    
+    @property
+    def keyrings(self):
+        return self.__keyrings
       
     def init_keyring(self):
         check_target_env_call(["pacman-key", "--init"])
