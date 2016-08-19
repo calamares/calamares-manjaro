@@ -23,6 +23,7 @@ import os, shutil, subprocess, sys, re
 import libcalamares
 
 from libcalamares.utils import check_target_env_call, debug
+from os.path import join
 
 class OperationTracker:
 	def __init__(self):
@@ -60,7 +61,6 @@ class PacmanController:
 	def __init__(self, root):
 		self.__root = root
 		self.__operations = libcalamares.globalstorage.value("packageOperations")
-		self.__keyrings = libcalamares.job.configuration.get('keyrings', [])
 		self.__tracker = OperationTracker()
 		self._progress = float(0)
 
@@ -77,22 +77,12 @@ class PacmanController:
 		return self.__operations
 
 	@property
-	def keyrings(self):
-		return self.__keyrings
-
-	@property
 	def progress(self):
 		return self._progress
 
 	@progress.setter
 	def progress(self, value):
 		self._progress = value
-
-	def init_keyring(self):
-		check_target_env_call(["pacman-key", "--init"])
-
-	def populate_keyring(self):
-		check_target_env_call(["pacman-key", "--populate"] + self.keyrings)
 
 	def send_pg(self, counter):
 		if self.tracker.total != 0:
@@ -141,8 +131,8 @@ class PacmanController:
 		return None
 
 	def install(self, local=False):
-		cachedir = os.path.join(self.root, "var/cache/pacman/pkg")
-		dbdir = os.path.join(self.root, "var/lib/pacman")
+		cachedir = join(self.root, "var/cache/pacman/pkg")
+		dbdir = join(self.root, "var/lib/pacman")
 		args = ["pacman", "--noconfirm"]
 		if local:
 			args.extend(["-U"])
@@ -158,7 +148,7 @@ class PacmanController:
 		cmd = args + self.operations["remove"]
 		check_target_env_call(cmd)
 
-	def run(self, initkeys=False):
+	def run(self):
 		for op in self.operations.keys():
 			if op == "install":
 				self.install()
@@ -167,10 +157,6 @@ class PacmanController:
 			elif op == "remove":
 				self.tracker.total(len(self.operations["remove"]))
 				self.remove()
-		
-		if initkeys:		
-			self.init_keyring()
-			self.populate_keyring()
 
 		return None
 
@@ -199,7 +185,7 @@ class ChrootController:
 	def prepare(self):
 		cal_umask = os.umask(0)
 		self.make_dirs()
-		path = os.path.join(self.root, "run")
+		path = join(self.root, "run")
 		debug("Fix permissions: {}".format(path))
 		os.chmod(path, 0o755)
 		os.umask(cal_umask)
@@ -208,7 +194,7 @@ class ChrootController:
 		self.prepare()
 		pacman = PacmanController(self.root)
 
-		return pacman.run(initkeys=False)
+		return pacman.run()
 
 def run():
 	""" Create chroot dirs and install pacman, kernel and netinstall selection """
