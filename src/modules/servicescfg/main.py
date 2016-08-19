@@ -44,7 +44,7 @@ class ServicesController:
         self.setExpression('s|^.*rc_shell=.*|rc_shell="/usr/bin/sulogin"|', "/etc/rc.conf")
         self.setExpression('s|^.*rc_controller_cgroups=.*|rc_controller_cgroups="YES"|', "/etc/rc.conf")
         exp = 's|^.*keymap=.*|keymap="' + libcalamares.globalstorage.value("keyboardLayout") + '"|'
-        self.setExpression(exp, "etc/conf.d/keymaps")
+        self.setExpression(exp, "/etc/conf.d/keymaps")
         self.setExpression('s|pam_systemd.so|pam_ck_connector.so nox11|', "/etc/pam.d/system-login")
         for dm in libcalamares.globalstorage.value("displayManagers"):
             exp = 's|^.*DISPLAYMANAGER=.*|DISPLAYMANAGER="' + dm + '"|'
@@ -55,7 +55,7 @@ class ServicesController:
         
     def update(self, action, state):
         for svc in self.services[state]:
-            if exists(self.root + "/etc/init.d/" + svc["name"]):
+            if exists(join(self.root, "etc/init.d/" + svc["name"])):
                 check_target_env_call(["rc-update", action, svc["name"], svc["runlevel"]])
 
     def run(self):
