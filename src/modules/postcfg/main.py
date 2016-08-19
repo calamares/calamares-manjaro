@@ -21,52 +21,45 @@ import libcalamares
 
 import os
 import shutil
-
+from subprocess import check_call
+from os.path import join
+from libcalamares import target_env_call
+    
 def run():
     """ Misc postinstall configurations """
 
     install_path = libcalamares.globalstorage.value( "rootMountPoint" )
 
     # Update grub.cfg
-    if os.path.exists("{!s}/usr/bin/update-grub".format(install_path)) and libcalamares.globalstorage.value("bootLoader") is not None:
-        libcalamares.utils.target_env_call(["update-grub"])
+    if os.path.exists(join(install_path, "usr/bin/update-grub")) and libcalamares.globalstorage.value("bootLoader") is not None:
+        target_env_call(["update-grub"])
 
     # Remove calamares
-    if os.path.exists("{!s}/usr/bin/calamares".format(install_path)):
-        libcalamares.utils.target_env_call(['pacman', '-R', '--noconfirm', 'calamares'])
+    if os.path.exists(join(install_path, "usr/bin/calamares")):
+        target_env_call(['pacman', '-R', '--noconfirm', 'calamares'])
 
     # Copy mirror list
     shutil.copy2('/etc/pacman.d/mirrorlist',
-             os.path.join(install_path, 'etc/pacman.d/mirrorlist'))
+             join(install_path, 'etc/pacman.d/mirrorlist'))
 
-    # Copy random generated keys by pacman-init to target
-    if os.path.exists("{!s}/etc/pacman.d/gnupg".format(install_path)):
-        os.system("rm -rf {!s}/etc/pacman.d/gnupg".format(install_path))
-    os.system("cp -a /etc/pacman.d/gnupg {!s}/etc/pacman.d/".format(install_path))
-    libcalamares.utils.target_env_call(['pacman-key', '--populate', 'archlinux', 'manjaro'])
+    target_env_call(['pacman-key', '--init'])
+    target_env_call(['pacman-key', '--populate', 'archlinux', 'manjaro'])
     
     # Workaround for pacman-key bug FS#45351 https://bugs.archlinux.org/task/45351
     # We have to kill gpg-agent because if it stays around we can't reliably unmount
     # the target partition.
-    libcalamares.utils.target_env_call(['killall', '-9', 'gpg-agent'])
-
-    # Set /etc/keyboard.conf (keyboardctl is depreciated)
-    if os.path.exists("{!s}/etc/keyboard.conf".format(install_path)):
-        keyboard_layout = libcalamares.globalstorage.value("keyboardLayout")
-        keyboard_variant = libcalamares.globalstorage.value("keyboardVariant")
-        consolefh = open("{!s}/etc/keyboard.conf".format(install_path), "r")
-        newconsolefh = open("{!s}/etc/keyboard.new".format(install_path), "w")
-        for line in consolefh:
-            line = line.rstrip("\r\n")
-            if(line.startswith("XKBLAYOUT=")):
-                newconsolefh.write("XKBLAYOUT=\"{!s}\"\n".format(keyboard_layout))
-            elif(line.startswith("XKBVARIANT=") and keyboard_variant != ''):
-                newconsolefh.write("XKBVARIANT=\"{!s}\"\n".format(keyboard_variant))
-            else:
-                newconsolefh.write("{!s}\n".format(line))
-        consolefh.close()
-        newconsolefh.close()
-        libcalamares.utils.target_env_call(['mv', '/etc/keyboard.conf', '/etc/keyboard.conf.old'])
-        libcalamares.utils.target_env_call(['mv', '/etc/keyboard.new', '/etc/keyboard.conf'])
+    target_env_call(['killall', '-9', 'gpg-agent'])
+        
+    if os.path.exists(join(install_path, "usr/bin/openrc")):
+        check_call(["sed", "-e", 's|^.*rc_shell=.*|rc_shell="/usr/bin/sulogin"|', "-e", 's|^.*rc_controller_cgroups=.*|rc_controller_cgroups="YES"|', "-i", join(install_path, "etc/rc.conf")])
+        kbl = libcalamares.globalstorage.value("keyboardLayout")
+        rep_str = 's|^.*keymap=.*|keymap="' + kbl + '"|'
+        check_call(["sed", "-e", rep_str, "-i", join(install_path, "etc/conf.d/keymaps")])
+        for dm in libcalamares.globalstorage.value("displayManagers"):
+            rep_str = 's|^.*DISPLAYMANAGER=.*|DISPLAYMANAGER="' + dm + '"|'
+            check_call(["sed", "-e", rep_str, "-i", join(install_path, "etc/conf.d/xdm")])
+            if dm == "lightdm":
+                check_call(["sed", "-e", 's|^.*minimum-vt=.*|minimum-vt=7|', "-i", join(install_path, "etc/lightdm/lightdm.conf")])
+                check_call(["sed", "-e", 's|pam_systemd.so|pam_ck_connector.so nox11|', "-i", join(install_path, "etc/pam.d/lightdm-greeter")])
 
     return None
