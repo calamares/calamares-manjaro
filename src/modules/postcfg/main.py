@@ -23,9 +23,9 @@ import libcalamares
 
 import os
 import shutil
-from subprocess import check_call
+
 from os.path import join, exists
-from libcalamares import target_env_call
+from libcalamares.utils import target_env_call, check_target_env_call
 
 class ConfigController:
     def __init__(self):
@@ -45,9 +45,6 @@ class ConfigController:
 
     def populate_keyring(self):
         check_target_env_call(["pacman-key", "--populate"] + self.keyrings)
-        
-    def setExpression(self, pattern, file):
-        check_call(["sed", "-e", pattern, "-i", join(self.root, file)])
         
     def terminate(self, proc):
         target_env_call(['killall', '-9', proc])
@@ -75,22 +72,11 @@ class ConfigController:
         # the target partition.
         self.terminate('gpg-agent')
         
-        # configure openrc specific settings
-        if exists(join(self.root, "usr/bin/openrc")):
-            self.setExpression('s|^.*rc_shell=.*|rc_shell="/usr/bin/sulogin"|', "etc/rc.conf")
-            self.setExpression('s|^.*rc_controller_cgroups=.*|rc_controller_cgroups="YES"|', "etc/rc.conf")
-            exp = 's|^.*keymap=.*|keymap="' + libcalamares.globalstorage.value("keyboardLayout") + '"|'
-            self.setExpression(exp, "etc/conf.d/keymaps")
-            for dm in libcalamares.globalstorage.value("displayManagers"):
-                exp = 's|^.*DISPLAYMANAGER=.*|DISPLAYMANAGER="' + dm + '"|'
-                self.setExpression(exp, "etc/conf.d/xdm")
-                if dm == "lightdm":
-                    self.setExpression('s|^.*minimum-vt=.*|minimum-vt=7|', "etc/lightdm/lightdm.conf")
-                    self.setExpression('s|pam_systemd.so|pam_ck_connector.so nox11|', "etc/pam.d/lightdm-greeter")
-        
         # Update grub.cfg
         if exists(join(self.root, "usr/bin/update-grub")) and libcalamares.globalstorage.value("bootLoader") is not None:
             target_env_call(["update-grub"])
+            
+        return None
     
 def run():
     """ Misc postinstall configurations """
