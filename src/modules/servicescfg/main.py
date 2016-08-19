@@ -22,7 +22,7 @@ import libcalamares
 import os
 
 from libcalamares.utils import check_target_env_call, debug
-from os.path import exists
+from os.path import exists, join
 
 class ServicesController:
     def __init__(self):
@@ -32,14 +32,14 @@ class ServicesController:
     @property
     def root(self):
         return self.__root
-    
+
     @property
     def services(self):
         return self.__services
-    
+
     def setExpression(self, pattern, file):
         check_target_env_call(["sed", "-e", pattern, "-i", file])
-        
+
     def configure(self):
         self.setExpression('s|^.*rc_shell=.*|rc_shell="/usr/bin/sulogin"|', "/etc/rc.conf")
         self.setExpression('s|^.*rc_controller_cgroups=.*|rc_controller_cgroups="YES"|', "/etc/rc.conf")
@@ -52,7 +52,7 @@ class ServicesController:
             if dm == "lightdm":
                 self.setExpression('s|^.*minimum-vt=.*|minimum-vt=7|', "/etc/lightdm/lightdm.conf")
                 self.setExpression('s|pam_systemd.so|pam_ck_connector.so nox11|', "/etc/pam.d/lightdm-greeter")
-        
+
     def update(self, action, state):
         for svc in self.services[state]:
             if exists(join(self.root, "etc/init.d/" + svc["name"])):
