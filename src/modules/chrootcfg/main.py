@@ -55,7 +55,7 @@ class OperationTracker:
 	@total.setter
 	def total(self, value):
 		self._total = value
-	
+
 	@property
 	def progress(self):
 		return self._progress
@@ -63,14 +63,15 @@ class OperationTracker:
 	@progress.setter
 	def progress(self, value):
 		self._progress = value
-		
+
 	def send_progress(self, counter, phase):
 		for p in range(phase):
 			if self.total == 0:
 				continue
-			step = 0.10
-			step += 0.90 * (counter / float(self.total))
-			self.progress += step / float(p+1)
+			step = 0.05
+			step += 0.95 * (counter / float(self.total))
+			self.progress += step / self.total
+
 			debug("Progress: {}".format(self.progress))
 
 		libcalamares.job.setprogress(self.progress)
@@ -95,17 +96,17 @@ class PacmanController:
 	@property
 	def operations(self):
 		return self.__operations
-	
+
 	@property
 	def keyrings(self):
 		return self.__keyrings
-	
+
 	def init_keyring(self):
 		target_env_call(["pacman-key", "--init"])
-	
+
 	def populate_keyring(self):
 		target_env_call(["pacman-key", "--populate"] + self.keyrings)
-		
+
 	def rank_mirrors(self):
 		check_target_env_call(["pacman-mirrors", "-g", "-m", "rank"])
 
@@ -175,7 +176,7 @@ class PacmanController:
 			elif op == "remove":
 				self.tracker.total(len(self.operations["remove"]))
 				self.remove()
-			
+
 		self.init_keyring()
 		self.populate_keyring()
 		if rank:
@@ -204,11 +205,11 @@ class ChrootController:
 				mod = int(target["mode"],8)
 				debug("Mode: {}".format(oct(mod)))
 				os.makedirs(dest, mode=mod)
-	
+
 	def copy_file(self, file):
 		if os.path.exists(os.path.join("/",file)):
 			shutil.copy2(os.path.join("/",file), os.path.join(self.root, file))
-	
+
 	def prepare(self):
 		cal_umask = os.umask(0)
 		self.make_dirs()
