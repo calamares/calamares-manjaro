@@ -223,9 +223,9 @@
         - open-fuse-iso
         - manjaro-xfce-minimal-settings
 
- - name: 'lxde-gtk3'
-   description: 'LXDE gtk3 Desktop'
-   packages:
+- name: 'lxde-gtk3'
+  description: 'LXDE gtk3 Desktop'
+  packages:
        - lxappearance-gtk3
        - lxappearance-obconf-gtk3
        - lxde-common
@@ -241,9 +241,9 @@
        - openbox
        - pcmanfm-gtk3
 
- - name: 'mate-gtk3'
-   description: 'Mate gtk3 Desktop'
-   packages:
+- name: 'mate-gtk3'
+  description: 'Mate gtk3 Desktop'
+  packages:
        - caja-gtk3
        - marco-gtk3
        - mate-backgrounds
