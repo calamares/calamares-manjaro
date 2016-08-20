@@ -60,7 +60,7 @@ class OperationTracker:
 	def progress(self):
 		return self._progress
 
-	@phase.setter
+	@progress.setter
 	def progress(self, value):
 		self._progress = value
 		
