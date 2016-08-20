@@ -60,22 +60,25 @@ class MhwdController:
 	@property
 	def bus(self):
 		return self.__bus
-		
-	def mount_repo(self):
-		call(["mount", "-Br", "/opt", join(self.root, "opt")])
 	
-	def umount_repo(self):
-		call(["umount", "-lv", join(self.root, "opt")])
+	def umount(self, mp):
+		call(["umount", "-l", join(self.root, mp)])
+		
+	def mount(self, mp):
+		call(["mount", "-Br", "/" + mp, join(self.root, mp)])
 	
 	def configure(self, name, id):
 		cmd = ["mhwd", "-a", str(name), str(self.driver), str(id).zfill(4)]
 		if self.local:
-			self.mount_repo()
+			self.mount("opt")
 			cmd.extend(["--pmconfig", self.repo])
-
+			
+		self.mount("etc/resolv.conf")
 		check_target_env_call(cmd)
+		
 		if self.local:
-			self.umount_repo()
+			self.umount("opt")
+		self.umount("etc/resolv.conf")
 		
 	def run(self):
 		for id in self.identifier['net']:
