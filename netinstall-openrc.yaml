@@ -242,8 +242,8 @@
         - sddm-consolekit
 
 - name: 'lxde-gtk3'
-   description: 'LXDE gtk3 Desktop'
-   packages:
+  description: 'LXDE gtk3 Desktop'
+  packages:
        - lxappearance-gtk3
        - lxappearance-obconf-gtk3
        - lxde-common
