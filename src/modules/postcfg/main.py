@@ -68,8 +68,11 @@ class ConfigController:
         # Remove calamares
         self.remove_pkg("calamares", "usr/bin/calamares")
 
-        # Copy mirror list
-        self.copy_file('etc/pacman.d/mirrorlist')
+        # Generate mirror list
+        if exists(join(self.root, "usr/bin/pacman-mirrors")):
+            target_env_call(["pacman-mirrors", "-g"])
+        else:
+            self.copy_file('etc/pacman.d/mirrorlist')
 
         # Copy .config for root if exist
         self.copy_folder('etc/skel/.config', 'root')
