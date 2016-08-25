@@ -64,8 +64,11 @@ class ConfigController:
         # Remove calamares
         self.remove_pkg("calamares", "usr/bin/calamares")
 
-        # Copy mirror list
-        self.copy_file('etc/pacman.d/mirrorlist')
+        # Generate mirror list
+        if exists(join(self.root, "usr/bin/pacman-mirrors")):
+            target_env_call(["pacman-mirrors", "-g"])
+        else:
+            self.copy_file('etc/pacman.d/mirrorlist')
         
         # Workaround for pacman-key bug FS#45351 https://bugs.archlinux.org/task/45351
         # We have to kill gpg-agent because if it stays around we can't reliably unmount
