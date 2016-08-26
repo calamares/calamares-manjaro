@@ -52,6 +52,10 @@ class ConfigController:
     def copy_file(self, file):
         if exists("/" + file):
             shutil.copy2("/" + file, join(self.root, file))
+
+    def copy_folder(self, source, target):
+        if exists("/" + source):
+            shutil.copytree("/" + source, join(self.root, target))
     
     def remove_pkg(self, pkg, path):
         if exists(join(self.root, path)):
@@ -66,6 +70,9 @@ class ConfigController:
 
         # Copy mirror list
         self.copy_file('etc/pacman.d/mirrorlist')
+
+        # Copy .config for root if exist
+        self.copy_folder('etc/skel/.config', 'root')
         
         # Workaround for pacman-key bug FS#45351 https://bugs.archlinux.org/task/45351
         # We have to kill gpg-agent because if it stays around we can't reliably unmount
