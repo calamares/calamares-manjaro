@@ -3,7 +3,7 @@
 #
 # === This file is part of Calamares - <http://github.com/calamares> ===
 #
-#   Copyright 2014 - 2015, Philip Müller <philm@manjaro.org>
+#   Copyright 2014 - 2016, Philip Müller <philm@manjaro.org>
 #   Copyright 2016, Artoo <artoo@manjaro.org>
 #
 #   Calamares is free software: you can redistribute it and/or modify
@@ -23,6 +23,7 @@ import libcalamares
 
 import os
 import shutil
+import distutils.dir_util
 
 from os.path import join, exists
 from libcalamares.utils import target_env_call, check_target_env_call
@@ -52,6 +53,10 @@ class ConfigController:
     def copy_file(self, file):
         if exists("/" + file):
             shutil.copy2("/" + file, join(self.root, file))
+
+    def copy_folder(self, source, target):
+        if exists("/" + source):
+            distutils.dir_util.copy_tree("/" + source, join(self.root, target))
     
     def remove_pkg(self, pkg, path):
         if exists(join(self.root, path)):
@@ -69,6 +74,9 @@ class ConfigController:
             target_env_call(["pacman-mirrors", "-g"])
         else:
             self.copy_file('etc/pacman.d/mirrorlist')
+
+        # Copy skel to root
+        self.copy_folder('etc/skel', 'root')
         
         # Workaround for pacman-key bug FS#45351 https://bugs.archlinux.org/task/45351
         # We have to kill gpg-agent because if it stays around we can't reliably unmount
