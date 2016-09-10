@@ -38,7 +38,7 @@ class PlymouthController:
                          plymouth_theme + '|', "-i", "/etc/plymouth/plymouthd.conf"])
 
     def detect(self):
-        plymouth_found = target_env_call(["sh", "-c", "which plymouth"])
+        plymouth_found = target_env_call(["which", "plymouth"])
         debug("which plymouth exit code: {!s}".format(plymouth_found))
 
         if plymouth_found == 0:
