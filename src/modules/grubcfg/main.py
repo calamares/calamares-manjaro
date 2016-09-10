@@ -36,11 +36,10 @@ def modify_grub_default(partitions, root_mount_point, distributor):
     distributor_replace = distributor.replace("'", "'\\''")
     use_splash = ""
     swap_uuid = ""
-    if libcalamares.globalstorage.contains("hasPlymouth"):
-        plymouth_found = libcalamares.globalstorage.value("hasPlymouth")
 
-    if plymouth_found:
-        use_splash = "splash"
+    if libcalamares.globalstorage.contains("hasPlymouth"):
+        if libcalamares.globalstorage.value("hasPlymouth"):
+            use_splash = "splash"
 
     cryptdevice_params = []
 

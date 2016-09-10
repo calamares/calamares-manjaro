@@ -38,15 +38,15 @@ class PlymouthController:
                          plymouth_theme + '|', "-i", "/etc/plymouth/plymouthd.conf"])
 
     def detect(self):
-        plymouth_found = target_env_call(["which", "plymouth"])
-        debug("which plymouth exit code: {!s}".format(plymouth_found))
+        isPlymouth = target_env_call(["which", "plymouth"])
+        debug("which plymouth exit code: {!s}".format(isPlymouth))
 
-        if plymouth_found == 0:
+        if isPlymouth == 0:
             libcalamares.globalstorage.insert("hasPlymouth", True)
         else:
             libcalamares.globalstorage.insert("hasPlymouth", False)
 
-        return plymouth_found
+        return isPlymouth
 
     def run(self):
         if self.detect() == 0:
